@@ -1,3 +1,6 @@
+import pygame
+
+
 class Sprite:
     @staticmethod
     def draw(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32):
@@ -33,6 +36,17 @@ class Sprite:
         percent:[0,1]
         """
         dest.blit(source, (x, y), (0, 0, int(source.get_width() * percent), source.get_height()))
+
+    @staticmethod
+    def blit_alpha(target, source, x, y, opacity):
+        """
+        绘制半透明图片（解决带alpha通道的surface的set_alpha不起作用的问题）
+        """
+        temp = pygame.Surface((source.get_width(), source.get_height())).convert()
+        temp.blit(target, (-x, -y))
+        temp.blit(source, (0, 0))
+        temp.set_alpha(opacity)
+        target.blit(temp, (x, y))
 
 
 def draw_text(dest, x, y, text, font, rgb):

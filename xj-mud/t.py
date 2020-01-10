@@ -2,6 +2,8 @@ import sys
 
 import pygame
 
+from code.engine.sprite import Sprite
+
 
 class Game:
     def __init__(self, title, width, height, fps=60):
@@ -29,7 +31,7 @@ class Game:
     def __init_game(self):
         self.image = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
         # self.image=self.image.convert()
-        self.image.set_alpha(100)
+        # self.image.set_alpha(100)
 
     def update(self):
         while True:
@@ -38,7 +40,9 @@ class Game:
             # 逻辑更新
             self.event_handler()
             # 画面更新
-            self.screen.blit(self.image, (0, 0))
+            # self.screen.blit(self.image, (0, 0))
+            Sprite.blit_alpha(self.screen, self.image, 0, 0, 255)
+            Sprite.blit_alpha(self.screen, self.image, 0, 200, 100)
             pygame.display.update()
 
     def event_handler(self):
@@ -49,4 +53,4 @@ class Game:
 
 if __name__ == '__main__':
     # Game("仙剑", 640, 900)
-    Game("仙剑", 320, 240)
+    Game("仙剑", 320, 500)
