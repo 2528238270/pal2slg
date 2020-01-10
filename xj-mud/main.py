@@ -46,7 +46,6 @@ class Game:
         g.ry_fnt = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
-        print(g.ry_fnt_data)
         g.fight_mgr = FightManager()
         g.screen = self.screen
         g.battle_data['teammates'] = [
