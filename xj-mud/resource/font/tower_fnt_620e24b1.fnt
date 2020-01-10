@@ -1,0 +1,12 @@
+{"file":"tower_fnt_b319ce58.png","frames":{
+"0":{"x":1,"y":32,"w":16,"h":25,"offX":0,"offY":2,"sourceW":16,"sourceH":29},
+"1":{"x":113,"y":1,"w":11,"h":24,"offX":0,"offY":3,"sourceW":11,"sourceH":29},
+"2":{"x":112,"y":28,"w":15,"h":25,"offX":0,"offY":2,"sourceW":15,"sourceH":29},
+"3":{"x":19,"y":32,"w":15,"h":25,"offX":0,"offY":2,"sourceW":15,"sourceH":29},
+"4":{"x":76,"y":1,"w":17,"h":24,"offX":0,"offY":3,"sourceW":17,"sourceH":29},
+"5":{"x":36,"y":32,"w":15,"h":24,"offX":0,"offY":3,"sourceW":15,"sourceH":29},
+"6":{"x":94,"y":28,"w":16,"h":25,"offX":0,"offY":2,"sourceW":16,"sourceH":29},
+"7":{"x":53,"y":32,"w":15,"h":24,"offX":0,"offY":3,"sourceW":15,"sourceH":29},
+"8":{"x":76,"y":27,"w":16,"h":25,"offX":0,"offY":2,"sourceW":16,"sourceH":29},
+"9":{"x":95,"y":1,"w":16,"h":25,"offX":0,"offY":2,"sourceW":16,"sourceH":29},
+"#":{"x":1,"y":1,"w":73,"h":29,"offX":0,"offY":0,"sourceW":73,"sourceH":29}}}
