@@ -8,8 +8,8 @@ async def hello():
         while True:
             # async for msg in websocket:
             #     print(msg)
-            s=input("请输入：")
-            await websocket.send(s)
+            await asyncio.sleep(1)
+            await websocket.send('{"name":"login"}')
             # a=await websocket.recv()
             # print(a)
 asyncio.get_event_loop().run_until_complete(hello())
