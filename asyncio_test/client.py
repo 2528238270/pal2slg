@@ -9,7 +9,7 @@ async def hello():
             # async for msg in websocket:
             #     print(msg)
             await asyncio.sleep(1)
-            await websocket.send('{"name":"login"}')
+            await websocket.send('{"protocol_name":"login"}')
             # a=await websocket.recv()
             # print(a)
 asyncio.get_event_loop().run_until_complete(hello())

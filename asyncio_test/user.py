@@ -3,24 +3,25 @@ import json
 from foxy_framework.server import Connection
 from foxy_framework.server import Server
 
+import api
+
 
 @Server.register_cls
-class User(Connection):
+class Player(Connection):
     """
     用户自定义类
     """
 
     async def deal_data(self, data):
         """
-        我们规定协议格式：
-        {
-            "protocol":"login",
-            "data":"加密的json字符串",
-            "sign":"签名"
-        }
+        处理客户端发送过来的消息
         """
         py_obj = json.loads(data)
-        await self.send(py_obj)
+        protocol_name = py_obj['protocol_name']
+        method = getattr(api, protocol_name)
+        if method is None:
+            print("协议非法")
+        await method(self, data)
 
     async def send(self, py_obj):
         """
