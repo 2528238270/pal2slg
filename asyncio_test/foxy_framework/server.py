@@ -98,7 +98,7 @@ class Server:
         """
         try:
             async for msg in user.websocket:
-                user.deal_data(msg)
+                await user.deal_data(msg)
         except:
             g.clients.remove(user)
             traceback.print_exc()
