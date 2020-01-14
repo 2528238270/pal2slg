@@ -6,6 +6,7 @@ class Global:
 
     engine = None  # sqlalchemy数据库引擎
     Session = None  # 数据库session
+    pool = None  # 数据库连接池
     clients = []  # 在线客户端
 
     def __new__(cls, *args, **kwargs):

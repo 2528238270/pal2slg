@@ -3,10 +3,11 @@ import datetime
 import time
 import traceback
 
+import aiopg
 import websockets
 
 from foxy_framework.server_global import g
-from sqlalchemy import create_engine
+from aiopg.sa import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
@@ -65,8 +66,8 @@ class Server:
         """
         # 初始化数据库
         # TODO:在这里初始化数据库连接
-        g.engine = create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
-        g.Session = sessionmaker(bind=g.engine)
+        # g.engine = create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
+        # g.Session = sessionmaker(bind=g.engine)
         # 检测自定义cls
         if self.__user_cls is None:
             self.print_log('服务器启动失败，未注册用户自定义类')
@@ -76,7 +77,10 @@ class Server:
         asyncio.get_event_loop().run_forever()
 
     async def init_server(self, ip, port):
+        # g.pool = await aiopg.create_pool('postgresql://postgres:123456@47.100.44.206:5432/mud')
+        g.engine = await create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
         start_server = websockets.serve(self.accept, ip, port)
+
         self.print_log("服务端启动成功！")
         await asyncio.wait([start_server, self.producer_handler()])
 
