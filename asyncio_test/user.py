@@ -1,4 +1,5 @@
 import json
+import time
 
 from foxy_framework.server import Connection
 from foxy_framework.server import Server
@@ -13,6 +14,12 @@ class Player(Connection):
     用户自定义类
     """
     user_data = None
+    user_last_beat = 0  # 上一次心跳时间
+    user_timeout = 60  # 心跳超时时间，秒
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_last_beat = time.time()
 
     async def deal_data(self, data):
         """
@@ -35,6 +42,7 @@ class Player(Connection):
         """
         json_str = json.dumps(py_obj, ensure_ascii=False)
         await self.websocket.send(json_str)
+        self.user_last_beat = time.time()
 
     async def offline(self, msg):
         """
@@ -58,4 +66,9 @@ class MainLoop:
         """
         此处代码会每秒执行一次
         """
-        print("此处代码会每秒执行一次")
+        # 心跳检测
+        now = time.time()
+        for player in g.clients:
+            if now - player.user_last_beat > player.user_timeout:
+                await player.offline('心跳超时')
+                continue

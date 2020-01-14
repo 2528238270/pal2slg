@@ -128,12 +128,17 @@ class Server:
         except:
             await user.offline('数据异常！')
             self.print_log("客户端数据异常，已强制下线。客户端原始数据:{}".format(m))
-            # traceback.print_exc()
+            traceback.print_exc()
 
     async def producer_handler(self):
         """
         服务端主逻辑
         """
+        count = 0
         while True:
             await asyncio.sleep(1)
             await self.__main_loop_obj()
+            count += 1
+            if count == 10:
+                print('当前在线人数：', len(g.clients))
+                count = 0
