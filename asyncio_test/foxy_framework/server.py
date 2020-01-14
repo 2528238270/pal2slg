@@ -3,12 +3,10 @@ import datetime
 import time
 import traceback
 
-import aiopg
 import websockets
 
 from foxy_framework.server_global import g
 from aiopg.sa import create_engine
-from sqlalchemy.orm import sessionmaker
 
 
 class Connection:
@@ -25,12 +23,20 @@ class Connection:
         """
         raise NotImplementedError
 
+    def offline(self, msg):
+        """
+        离线处理，需要子类实现
+        """
+        raise NotImplementedError
+
 
 class Server:
     """
     服务端主类
     """
     __user_cls = None
+    __main_loop = None
+    __main_loop_obj = None
 
     @staticmethod
     def print_log(msg):
@@ -60,24 +66,31 @@ class Server:
 
         cls.__user_cls = sub_cls
 
+    @classmethod
+    def register_main_loop(cls, sub_cls):
+        """
+        注册主循环对象
+        """
+        cls.__main_loop = sub_cls
+
     def __init__(self, ip, port):
         """
         启动服务端
         """
-        # 初始化数据库
-        # TODO:在这里初始化数据库连接
-        # g.engine = create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
-        # g.Session = sessionmaker(bind=g.engine)
         # 检测自定义cls
         if self.__user_cls is None:
             self.print_log('服务器启动失败，未注册用户自定义类')
             return
+        if self.__main_loop is not None:
+            self.__main_loop_obj = self.__main_loop()
         # 启动服务端
         asyncio.get_event_loop().run_until_complete(self.init_server(ip, port))
         asyncio.get_event_loop().run_forever()
 
     async def init_server(self, ip, port):
-        # g.pool = await aiopg.create_pool('postgresql://postgres:123456@47.100.44.206:5432/mud')
+        """
+        初始化服务端
+        """
         g.engine = await create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
         start_server = websockets.serve(self.accept, ip, port)
 
@@ -88,34 +101,39 @@ class Server:
         """
         每当有新连接进入时，就会触发这里
         """
-        self.print_log('有新的连接：{}'.format(websocket.remote_address))
         try:
+            if len(g.clients) >= g.MAX_ONLINE_NUMBER:
+                await websocket.close()
+                self.print_log('服务器爆满，无法接收新连接！')
+                return
             user = self.__user_cls(websocket)
             g.clients.append(user)
+            self.print_log(
+                '有新的连接：{}，当前在线人数：{}/{}'.format(websocket.remote_address, len(g.clients), g.MAX_ONLINE_NUMBER)
+            )
             await self.consumer_handler(user, path)
         except:
-            self.print_log('客户端处理异常：\n{}'.format(traceback.format_exc()))
+            self.print_log('理论上来说，这里不会异常，客户端处理异常：\n{}'.format(traceback.format_exc()))
+            websocket.close()
 
     async def consumer_handler(self, user, path):
         """
         处理客户端数据
         """
+        m = None
         try:
             async for msg in user.websocket:
+                m = msg
                 await user.deal_data(msg)
         except:
-            g.clients.remove(user)
-            traceback.print_exc()
-            # TODO:在这里编写客户端异常处理逻辑
+            await user.offline('数据异常！')
+            self.print_log("客户端数据异常，已强制下线。客户端原始数据:{}".format(m))
+            # traceback.print_exc()
 
     async def producer_handler(self):
         """
         服务端主逻辑
         """
         while True:
-            # TODO:在这里编写循环逻辑
             await asyncio.sleep(1)
-            # for client in g.clients:
-            #     # session = g.Session()
-            #     # users = session.query(User.name).all()
-            #     await client.send("当前在线人数："+str(len(g.clients)))
+            await self.__main_loop_obj()
