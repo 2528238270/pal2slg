@@ -71,3 +71,11 @@ class MainLoop:
             if now - player.user_last_beat > player.user_timeout:
                 await player.offline('心跳超时')
                 continue
+
+        g.count += 1
+        if g.count == 15:
+            Server.print_log('当前在线人数：{}'.format(len(g.clients)))
+            g.count = 0
+
+    def __init__(self):
+        g.count = 0

@@ -134,11 +134,7 @@ class Server:
         """
         服务端主逻辑
         """
-        count = 0
         while True:
             await asyncio.sleep(1)
             await self.__main_loop_obj()
-            count += 1
-            if count == 10:
-                print('当前在线人数：', len(g.clients))
-                count = 0
+

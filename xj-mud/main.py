@@ -9,7 +9,7 @@ from code.fighter import Fighter, FightManager, DamageAnimation
 
 
 class Game:
-    def __init__(self, title, width, height, fps=60):
+    def __init__(self, title, width, height, fps=10):
         """
         :param title: 游戏窗口的标题
         :param width: 游戏窗口的宽度
@@ -83,5 +83,5 @@ class Game:
 
 
 if __name__ == '__main__':
-    # Game("仙剑", 640, 900)
-    Game("仙剑", 1, 1)
+    Game("仙剑", 640, 900)
+    # Game("仙剑", 1, 1)
