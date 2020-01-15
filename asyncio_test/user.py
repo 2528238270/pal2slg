@@ -1,5 +1,6 @@
 import json
 import time
+import traceback
 
 from foxy_framework.server import Connection
 from foxy_framework.server import Server
@@ -15,7 +16,7 @@ class Player(Connection):
     """
     user_data = None
     user_last_beat = 0  # 上一次心跳时间
-    user_timeout = 60  # 心跳超时时间，秒
+    user_timeout = 600  # 心跳超时时间，秒
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,24 +41,22 @@ class Player(Connection):
         """
         发送数据
         """
-        json_str = json.dumps(py_obj, ensure_ascii=False)
-        await self.websocket.send(json_str)
-        self.user_last_beat = time.time()
+        try:
+            json_str = json.dumps(py_obj, ensure_ascii=False)
+            print(json_str)
+            await self.websocket.send(json_str)
+            self.user_last_beat = time.time()
+        except:
+            print('发送数据失败')
+            traceback.print_exc()
+            await self.offline('连接异常')
 
     async def offline(self, msg):
         """
         强制下线
         """
-        try:
-            await self.send({
-                'protocol_name': 'offline',
-                'data': {'msg': msg}
-            })
-        except:
-            pass
-        finally:
-            await self.websocket.close()
-            g.clients.remove(self)
+        await self.websocket.close()
+        g.clients.remove(self)
 
 
 @Server.register_main_loop
