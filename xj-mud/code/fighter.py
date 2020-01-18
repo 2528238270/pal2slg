@@ -46,7 +46,6 @@ class Fighter:
         self.y = self.box_y
 
         # 攻击动画相关参数
-        self.move = False           # 是否开始移动
         self.move_dir = 1           # 移动方向 1正向 -1反向
         self.speed = 0.4            # 单个方向攻击动画的时长，单位秒
         self.sin = None             # 移动方向的sin值
@@ -58,7 +57,7 @@ class Fighter:
         self.flag_y = 1             # y方向
 
         # 被攻击动画相关参数
-        self.state = 0              # 状态 0 普通状态 1 被攻击状态
+        self.state = 0              # 状态 0普通状态 1被攻击状态 2攻击状态 3技能释放状态
         self.move_len = 10          # 被攻击后退距离
         self.attacked_dir = -1      # 移动方向 -1后退 1前进
         self.current_len = 0        # 已移动长度
@@ -80,7 +79,7 @@ class Fighter:
         """
         开始攻击
         """
-        if self.move:
+        if self.state != 0:
             return
         self.length = math.sqrt((d_x - self.box_x - 60) ** 2 + (d_y - self.box_y - 30) ** 2)
         self.sin = abs(self.box_y - d_y) / self.length
@@ -88,7 +87,7 @@ class Fighter:
         self.l = self.length / (self.speed * g.fps)
         self.flag_x = (d_x - self.box_x) / abs(d_x - self.box_x) if abs(d_x - self.box_x) != 0 else 1
         self.flag_y = (d_y - self.box_y) / abs(d_y - self.box_y) if abs(d_y - self.box_y) != 0 else 1
-        self.move = True
+        self.state = 2
 
     def logic(self):
         """
@@ -172,8 +171,8 @@ class Fighter:
         """
         if self.skill_done:
             return
-        
-        if self.skill_counter==0:
+
+        if self.skill_counter == 0:
             if self.skill_cb1:
                 if self.skill_args1:
                     self.skill_cb1(*self.skill_args1)
@@ -226,7 +225,7 @@ class Fighter:
         """
         攻击动画逻辑
         """
-        if not self.move:
+        if self.state != 2:
             return
 
         if self.move_dir == 1:  # 正向移动
@@ -250,7 +249,7 @@ class Fighter:
             if self.d_l <= 0:
                 self.d_l = 0
                 self.move_dir = 3 - self.move_dir
-                self.move = False
+                self.state = 0
                 self.x = self.box_x
                 self.y = self.box_y
                 if self.cb2:
@@ -321,6 +320,7 @@ class FightManager:
         self.calc_result()
         # 播放战斗动画
         self.play_action()
+        print(json.dumps(self.fight_result))
         # 开始战斗（开始处理动画逻辑）
         self.fighting = True
 
@@ -332,7 +332,7 @@ class FightManager:
         计算战斗结果
         """
         # 每个回合的逻辑
-        for i in range(1,self.total_round):
+        for i in range(1, self.total_round + 1):
             # 遍历两边阵营
             for index in range(6):
                 # 取当前战斗对象
@@ -422,12 +422,12 @@ class FightManager:
         
         # 释放技能
         if fighter.skill is not None and round in fighter.skill['round']:
-            result=fighter.do_skill(peer_fighters)
+            result = fighter.do_skill(peer_fighters)
             self.fight_result.append({
                 'type': 'skill',
                 'team_type': team_type,  # 阵营 1我方 2敌方
                 'self_index': fighter.index,
-                'data':result
+                'data': result
             })
             return
         # 普通攻击
@@ -447,6 +447,13 @@ class FightManager:
                 })
                 break
 
+    def wrap_fight_result(self):
+        """
+        包装一层战斗数据（初始化）
+        """
+        for obj in self.fight_result:
+            obj['process'] = 0  # 进度 0未开始 1进行中 2结束
+
     def logic(self):
         """
         战斗逻辑
@@ -455,6 +462,7 @@ class FightManager:
 
         if not self.fighting:
             return
+
         for fighter in self.render_teammates:
             if fighter is None:
                 continue
@@ -498,9 +506,9 @@ class FightManager:
         box_x = fighter.x
         box_y = fighter.y
         # 绘制边框
-        if fighter.state == 0:
+        if fighter.state in [0,2,3]:
             Sprite.blit(g.screen, g.bg_hero_1, box_x, box_y)
-        elif fighter.state == 1:
+        elif fighter.state in [1]:
             Sprite.blit(g.screen, g.bg_hero_2, box_x, box_y)
         # 绘制血量
         hp_percent = fighter.hp[0] / fighter.hp[1]
