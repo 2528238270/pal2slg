@@ -15,16 +15,22 @@ class Fighter:
     """
     attr = ['level', 'hp', 'atk', 'dfs', 'hit', 'cri', 'dod', 'rcri']
 
-    def __init__(self, index, team_type, name, level, hp, atk, dfs, hit, cri, dod, rcri):
-        self.name = name                # 英雄姓名
-        self.level = level              # 等级
-        self.hp = hp                    # 生命值
-        self.atk = atk                  # 攻击力
-        self.dfs = dfs                  # 防御力
-        self.hit = hit                  # 命中率
-        self.cri = cri                  # 暴击率
-        self.dod = dod                  # 闪避率
-        self.rcri = rcri                # 抗暴击率
+    def __init__(self, index, team_type, name, level, hp, atk, dfs, hit, cri, dod, rcri,skill_id=None):
+        self.name = name                        # 英雄姓名
+        self.level = level                      # 等级
+        self.hp = hp                            # 生命值
+        self.atk = atk                          # 攻击力
+        self.dfs = dfs                          # 防御力
+        self.hit = hit                          # 命中率
+        self.cri = cri                          # 暴击率
+        self.dod = dod                          # 闪避率
+        self.rcri = rcri                        # 抗暴击率
+        self.debuff = []                        # 减益效果
+        self.buff = []                          # 增益效果
+        if skill_id is not None:
+            self.skill = g.skill_data[skill_id-1]   # 技能
+        else:
+            self.skill = None
 
         self.team_type = team_type      # 队伍类型 1我方 2敌方
         self.index = index              # 在队伍中的位置
@@ -57,6 +63,19 @@ class Fighter:
         self.attacked_dir = -1      # 移动方向 -1后退 1前进
         self.current_len = 0        # 已移动长度
 
+        # 技能动画相关
+        self.skill_time = 0.5                                 # 显示多久
+        self.skill_count = int(g.fps * self.skill_time)     # 需要经过多少帧
+        self.skill_counter = 0                              # 计数过了多少帧
+        self.skill_alpha = 255                              # 不透明度 
+        self.skill_x = None
+        self.skill_y = None
+        self.skill_done = True                              # 是否完成
+        if self.skill:
+            self.skill_name = self.skill['name']
+        else:
+            self.skill_name = ''
+
     def start_attack(self, d_x, d_y):
         """
         开始攻击
@@ -77,6 +96,7 @@ class Fighter:
         """
         self.attack_logic()
         self.be_attack_logic()
+        self.skill_logic()
 
     def attack(self, target):
         """
@@ -99,6 +119,77 @@ class Fighter:
         target.hp[0] -= damage
 
         return is_cri, damage
+
+    def do_skill(self,peer_fighters):
+        """
+        释放技能
+        """
+        result={
+            'type':self.skill['type'],
+            'name':self.skill['name'],
+            'data':[]
+        }
+        if self.skill['type']=='AOE':     # 群体攻击技能
+            for target in peer_fighters:
+                if target is None:
+                    continue
+                is_cri, damage=self.attack(target)
+                result['data'].append({
+                    'is_cri':is_cri,
+                    'damage':damage,
+                    'target_index':target.index
+                })
+            #TODO:增益，减益
+        return result
+
+    def skill_play(self,_1=None,cb1=None,args1=None,cb2=None,args2=None):
+        """
+        播放技能动画
+        """
+        self.skill_cb1 = cb1
+        self.skill_args1 = args1
+        self.skill_cb2 = cb2
+        self.skill_args2 = args2
+        self.skill_x = self.box_x + 70
+        self.skill_y = self.box_y
+        self.skill_done = False
+
+    def aoe(self,data):
+        """
+        aoe技能释放
+        """
+        print(data)
+        for d in data['data']['data']:
+            if self.team_type==1:
+                target=g.fight_mgr.render_enemies[d['target_index']]
+            else:
+                target=g.fight_mgr.render_teammates[d['target_index']]
+            target.be_attack(d)
+
+    def skill_logic(self):
+        """
+        播放技能动画逻辑
+        """
+        if self.skill_done:
+            return
+        
+        if self.skill_counter==0:
+            if self.skill_cb1:
+                if self.skill_args1:
+                    self.skill_cb1(*self.skill_args1)
+                else:
+                    self.skill_cb1()
+        
+        self.skill_counter += 1
+
+        if self.skill_counter >= self.skill_count:
+            self.done = True
+            self.skill_counter = 0
+            if self.skill_cb2:
+                if self.skill_args2:
+                    self.skill_cb2(*self.skill_args2)
+                else:
+                    self.skill_cb2()
 
     def play(self, target, cb1=None, args1=None, cb2=None, args2=None):
         """
@@ -198,13 +289,13 @@ class FightManager:
     total_round = 20  # 最多战斗20个回合，如果20回合内没分出胜负，那么就算输了
 
     def __init__(self):
-        self.teammates = [None] * 6  # 我方阵营
-        self.enemies = [None] * 6  # 敌方阵营
-        self.render_teammates = [None] * 6  # 渲染用的列表
-        self.render_enemies = [None] * 6  # 渲染用的列表
-        self.fighting = False  # 是否正在战斗
-        self.fight_result = []  # 战斗结果，根据战斗结果构建动画
-        self.damage_list = []  # 伤害动画列表
+        self.teammates = [None] * 6             # 我方阵营
+        self.enemies = [None] * 6               # 敌方阵营
+        self.render_teammates = [None] * 6      # 渲染用的列表
+        self.render_enemies = [None] * 6        # 渲染用的列表
+        self.fighting = False                   # 是否正在战斗
+        self.fight_result = []                  # 战斗结果，根据战斗结果构建动画
+        self.damage_list = []                   # 伤害动画列表
 
     def start(self, teammates, enemies):
         """
@@ -241,7 +332,7 @@ class FightManager:
         计算战斗结果
         """
         # 每个回合的逻辑
-        for i in range(self.total_round):
+        for i in range(1,self.total_round):
             # 遍历两边阵营
             for index in range(6):
                 # 取当前战斗对象
@@ -283,10 +374,16 @@ class FightManager:
         """
         last = None
         for index, d in enumerate(data[::-1]):
-            if index == 0:
-                last = d[0], [d[1], d[1].be_attack, [d[2]], self.stop, None]
-            else:
-                last = d[0], [d[1], d[1].be_attack, [d[2]], *last]
+            if d[2]['type']=='attack':
+                if index == 0:
+                    last = d[0], [d[1], d[1].be_attack, [d[2]], self.stop, None]
+                else:
+                    last = d[0], [d[1], d[1].be_attack, [d[2]], *last]
+            elif d[2]['type']=='skill':
+                if index == 0:
+                    last = d[0], [None, d[1].aoe, [d[2]], self.stop, None]
+                else:
+                    last = d[0], [None, d[1].aoe, [d[2]], *last]
         return last
 
     def play_action(self):
@@ -301,22 +398,39 @@ class FightManager:
                 target = t[3 - action['team_type']][action['target_index']]
                 source = t[action['team_type']][action['self_index']]
                 action_list.append([source.play, target, action])
+            elif action['type']  == 'skill':    # 技能
+                source = t[action['team_type']][action['self_index']]
+                target = source
+                action_list.append([source.skill_play, source, action])
         # 构造调用链
         cb_link = self.create_action_cb(action_list)
+        print(cb_link)
         # 播放动画
         cb_link[0](*cb_link[1])
 
     def attack(self, round, team_type, fighter, peer_fighters):
         """
-        攻击
+        攻击，根据fighter的技能、回合数round进行策略选择
+        攻击逻辑：
+            1.触发身上所有buff
+            2.触发身上所有debuff
+            3.当前回合可以触发技能时，释放技能
+            4.不可以触发技能时，普通攻击
         """
-        # TODO:这里应该根据fighter的技能、回合数round进行策略选择。但是系统测试阶段只做单体攻击
-        # TODO:这个地方要大改
-        # TODO:这个地方要大改
-        # TODO:这个地方要大改
-        # TODO:这个地方要大改
         if fighter.hp[0] <= 0:
             return
+        
+        # 释放技能
+        if fighter.skill is not None and round in fighter.skill['round']:
+            result=fighter.do_skill(peer_fighters)
+            self.fight_result.append({
+                'type': 'skill',
+                'team_type': team_type,  # 阵营 1我方 2敌方
+                'self_index': fighter.index,
+                'data':result
+            })
+            return
+        # 普通攻击
         for peer_fighter in peer_fighters:
             if peer_fighter is not None:
                 is_cri, damage = fighter.attack(peer_fighter)  # 普通攻击
@@ -400,6 +514,9 @@ class FightManager:
                           (0, 0, 0))
         # 绘制名字
         draw_outline_text(g.screen, box_x + 2 + 60, box_y + 10, fighter.name, g.fnt_battle_name, (255, 0, 0), (0, 0, 0))
+        # 绘制技能名
+        if not fighter.skill_done:
+            draw_outline_text(g.screen, fighter.skill_x,fighter.skill_y, fighter.skill_name, g.fnt_battle_name, (255, 0, 0), (0, 0, 0))
 
 
 class DamageAnimation:
@@ -425,10 +542,6 @@ class DamageAnimation:
                 if g.ry_fnt_data['frames'][n]['h'] > height:
                     height = g.ry_fnt_data['frames'][n]['h']
             self.surface = Surface((width, height), flags=pygame.SRCALPHA)
-            # Surface.convert(self.surface)
-            # self.surface=self.surface.convert()
-            # self.surface.fill(pygame.Color(255, 255, 255, 255))
-            # self.surface.set_colorkey((255,255,255))
             offset_x = 0
             Sprite.draw_rect(
                 self.surface,
@@ -499,7 +612,11 @@ class DamageAnimation:
 
         self.done = False
         self.move_length = 50
-        self.current_length = 0
+        self.current_length = 0                 # 当前移动长度
+        self.time = 0.5                         # 伤害显示出来之后暂停多久
+        self.count = int(g.fps * self.time)     # 1秒需要经过多少帧
+        self.counter = 0                        # 计数过了多少帧
+        self.alpha = 255                        # 不透明度 
 
     def render(self):
         """
@@ -507,12 +624,18 @@ class DamageAnimation:
         """
         if self.done:
             return
-        Sprite.blit(g.screen, self.surface, self.x, self.y)
+        # Sprite.blit(g.screen, self.surface, self.x, self.y)
+        Sprite.blit_alpha(g.screen, self.surface, self.x, self.y, self.alpha)
 
     def logic(self):
         if self.done:
             return
+        self.counter += 1
+        if self.counter < self.count:
+            return 
+        
         self.y -= 1
         self.current_length += 1
+        self.alpha -= 5
         if self.current_length >= self.move_length:
             self.done = True

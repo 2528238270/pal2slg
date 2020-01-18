@@ -22,6 +22,7 @@ class Global:
         'teammates': [],        # 队友
         'enemies': []           # 敌人
     }
+    skill_data = []             # 技能数据
     fight_mgr = None            # 战斗管理器
 
     def __new__(cls, *args, **kwargs):

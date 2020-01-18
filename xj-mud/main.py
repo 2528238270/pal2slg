@@ -9,7 +9,7 @@ from code.fighter import Fighter, FightManager, DamageAnimation
 
 
 class Game:
-    def __init__(self, title, width, height, fps=10):
+    def __init__(self, title, width, height, fps=60):
         """
         :param title: 游戏窗口的标题
         :param width: 游戏窗口的宽度
@@ -46,17 +46,20 @@ class Game:
         g.ry_fnt = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
+        with open('./resource/skill.json', mode='r', encoding='utf8') as file:
+            g.skill_data = json.loads(file.read())
         g.fight_mgr = FightManager()
         g.screen = self.screen
         g.battle_data['teammates'] = [
-            Fighter(0, 1, '李逍遥', 1, [1000, 1000], 99999, 100, 10000, 8000, 0, 0),
+            Fighter(0, 1, '李逍遥', 1, [100, 100], 40, 10, 10000, 8000, 0, 0),
             Fighter(1, 1, '赵灵儿', 2, [800, 800], 50, 10, 10000, 2000, 0, 0),
-            Fighter(2, 1, '林月如', 3, [850, 850], 50, 10, 10000, 2000, 0, 0),
-            Fighter(4, 1, '阿奴', 4, [800, 800], 50, 10, 10000, 2000, 0, 0)
+            Fighter(2, 1, '林月如', 3, [100, 100], 40, 10, 10000, 2000, 0, 0),
+            # Fighter(4, 1, '阿奴', 4, [800, 800], 50, 10, 10000, 2000, 0, 0),
+            Fighter(5, 1, '赵日天', 5, [9999, 9999], 9999, 10, 10000, 10000, 0, 0)
         ]
         g.battle_data['enemies'] = [
-            Fighter(0, 2, '拜月教主', 1, [30000, 30000], 40, 1, 10000, 2000, 0, 0),
-            Fighter(1, 2, '石长老', 1, [10000, 10000], 20, 1, 10000, 2000, 0, 0),
+            Fighter(0, 2, '拜月教主', 1, [100, 100], 40, 1, 10000, 2000, 0, 0),
+            Fighter(1, 2, '石长老', 1, [100, 100], 20, 1, 10000, 2000, 0, 0),
             Fighter(2, 2, '水魔兽', 1, [50000, 50000], 30, 1, 10000, 2000, 0, 0),
             # Fighter(3,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
             # Fighter(4,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
