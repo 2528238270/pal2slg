@@ -190,20 +190,20 @@ class Fighter:
                 else:
                     self.skill_cb2()
 
-    def play(self, target, cb1=None, args1=None, cb2=None, args2=None):
+    def play(self, target, data):
         """
         播放动画
         """
-        self.cb1 = cb1
-        self.args1 = args1
-        self.cb2 = cb2
-        self.args2 = args2
         # 处理两边攻击位置的偏移量
         if self.box_x < target.box_x:
             dx = target.box_x - 70
         else:
             dx = target.box_x + 70
         dy = target.box_y
+
+        self.target = target
+        self.current_data = data
+
         self.start_attack(dx, dy)
 
     def be_attack(self, data):
@@ -236,11 +236,8 @@ class Fighter:
             if self.d_l >= self.length:
                 self.d_l = self.length
                 self.move_dir = 3 - self.move_dir
-                if self.cb1:
-                    if self.args1:
-                        self.cb1(*self.args1)
-                    else:
-                        self.cb1()
+                self.target.be_attack(self.current_data)
+
         else:  # 反向移动
             self.d_l -= self.l
             self.x = self.box_x + self.flag_x * self.d_l * self.cos
@@ -252,15 +249,8 @@ class Fighter:
                 self.state = 0
                 self.x = self.box_x
                 self.y = self.box_y
-                if self.cb2:
-                    if self.args2:
-                        self.cb2(*self.args2)
-                    else:
-                        self.cb2()
-                self.cb1 = None
-                self.cb2 = None
-                self.args1 = None
-                self.args2 = None
+                # 弹出第一个
+                g.fight_mgr.fight_result.pop(0)
 
     def be_attack_logic(self):
         """
@@ -318,9 +308,8 @@ class FightManager:
             self.render_enemies[fighter.index] = copy.deepcopy(fighter)
         # 计算战斗结果
         self.calc_result()
-        # 播放战斗动画
-        self.play_action()
-        print(json.dumps(self.fight_result))
+        # 包装战斗数据
+        self.wrap_fight_result()
         # 开始战斗（开始处理动画逻辑）
         self.fighting = True
 
@@ -366,47 +355,6 @@ class FightManager:
             if not any(self.enemies):
                 # TODO:敌方失败
                 break
-
-    def create_action_cb(self, data):
-        """
-        创建动作的调用cb链
-        d[0] 是回调函数， d[1]是目标对象 d[2]是构造本次回调的原始数据
-        """
-        last = None
-        for index, d in enumerate(data[::-1]):
-            if d[2]['type']=='attack':
-                if index == 0:
-                    last = d[0], [d[1], d[1].be_attack, [d[2]], self.stop, None]
-                else:
-                    last = d[0], [d[1], d[1].be_attack, [d[2]], *last]
-            elif d[2]['type']=='skill':
-                if index == 0:
-                    last = d[0], [None, d[1].aoe, [d[2]], self.stop, None]
-                else:
-                    last = d[0], [None, d[1].aoe, [d[2]], *last]
-        return last
-
-    def play_action(self):
-        """
-        播放动画
-        """
-        # 构造回调顺序列表
-        action_list = []
-        t = ['', self.render_teammates, self.render_enemies]
-        for action in self.fight_result:
-            if action['type'] == 'attack':  # 普通攻击
-                target = t[3 - action['team_type']][action['target_index']]
-                source = t[action['team_type']][action['self_index']]
-                action_list.append([source.play, target, action])
-            elif action['type']  == 'skill':    # 技能
-                source = t[action['team_type']][action['self_index']]
-                target = source
-                action_list.append([source.skill_play, source, action])
-        # 构造调用链
-        cb_link = self.create_action_cb(action_list)
-        print(cb_link)
-        # 播放动画
-        cb_link[0](*cb_link[1])
 
     def attack(self, round, team_type, fighter, peer_fighters):
         """
@@ -462,6 +410,19 @@ class FightManager:
 
         if not self.fighting:
             return
+
+        if len(self.fight_result) == 0:
+            self.fighting = False
+            return
+
+        first_data = self.fight_result[0]
+        team_list = [None, self.render_teammates, self.render_enemies]
+        if first_data['process'] == 0:  # 让第一位进入战斗状态
+            first_data['process'] = 1
+            if first_data['type'] == 'attack':  # 普通攻击
+                source = team_list[first_data['team_type']][first_data['self_index']]
+                target = team_list[3 - first_data['team_type']][first_data['target_index']]
+                source.play(target, first_data)
 
         for fighter in self.render_teammates:
             if fighter is None:
