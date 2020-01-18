@@ -69,7 +69,6 @@ class Fighter:
         self.skill_alpha = 255                              # 不透明度 
         self.skill_x = None
         self.skill_y = None
-        self.skill_done = True                              # 是否完成
         if self.skill:
             self.skill_name = self.skill['name']
         else:
@@ -119,46 +118,42 @@ class Fighter:
 
         return is_cri, damage
 
-    def do_skill(self,peer_fighters):
+    def do_skill(self, peer_fighters):
         """
-        释放技能
+        释放技能，服务端逻辑
         """
-        result={
-            'type':self.skill['type'],
-            'name':self.skill['name'],
-            'data':[]
+        result = {
+            'type': self.skill['type'],
+            'name': self.skill['name'],
+            'data': []
         }
-        if self.skill['type']=='AOE':     # 群体攻击技能
+        if self.skill['type'] == 'AOE':  # 群体攻击技能
             for target in peer_fighters:
                 if target is None:
                     continue
-                is_cri, damage=self.attack(target)
+                is_cri, damage = self.attack(target)
                 result['data'].append({
-                    'is_cri':is_cri,
-                    'damage':damage,
-                    'target_index':target.index
+                    'is_cri': is_cri,
+                    'damage': damage,
+                    'target_index': target.index
                 })
-            #TODO:增益，减益
+            # TODO:增益，减益
         return result
 
-    def skill_play(self,_1=None,cb1=None,args1=None,cb2=None,args2=None):
+    def skill_play(self, data):
         """
         播放技能动画
         """
-        self.skill_cb1 = cb1
-        self.skill_args1 = args1
-        self.skill_cb2 = cb2
-        self.skill_args2 = args2
         self.skill_x = self.box_x + 70
         self.skill_y = self.box_y
-        self.skill_done = False
+        self.current_data = data
+        self.state = 3
 
-    def aoe(self,data):
+    def aoe(self):
         """
         aoe技能释放
         """
-        print(data)
-        for d in data['data']['data']:
+        for d in self.current_data['data']['data']:
             if self.team_type==1:
                 target=g.fight_mgr.render_enemies[d['target_index']]
             else:
@@ -169,26 +164,19 @@ class Fighter:
         """
         播放技能动画逻辑
         """
-        if self.skill_done:
+        if self.state != 3:
             return
 
         if self.skill_counter == 0:
-            if self.skill_cb1:
-                if self.skill_args1:
-                    self.skill_cb1(*self.skill_args1)
-                else:
-                    self.skill_cb1()
+            self.aoe()
         
         self.skill_counter += 1
 
         if self.skill_counter >= self.skill_count:
-            self.done = True
+            self.state = 0
             self.skill_counter = 0
-            if self.skill_cb2:
-                if self.skill_args2:
-                    self.skill_cb2(*self.skill_args2)
-                else:
-                    self.skill_cb2()
+            # 弹出第一个
+            g.fight_mgr.fight_result.pop(0)
 
     def play(self, target, data):
         """
@@ -419,10 +407,12 @@ class FightManager:
         team_list = [None, self.render_teammates, self.render_enemies]
         if first_data['process'] == 0:  # 让第一位进入战斗状态
             first_data['process'] = 1
+            source = team_list[first_data['team_type']][first_data['self_index']]
             if first_data['type'] == 'attack':  # 普通攻击
-                source = team_list[first_data['team_type']][first_data['self_index']]
                 target = team_list[3 - first_data['team_type']][first_data['target_index']]
                 source.play(target, first_data)
+            elif first_data['type'] == 'skill':  # 技能攻击
+                source.skill_play(first_data)
 
         for fighter in self.render_teammates:
             if fighter is None:
@@ -483,9 +473,10 @@ class FightManager:
                           (0, 0, 0))
         # 绘制名字
         draw_outline_text(g.screen, box_x + 2 + 60, box_y + 10, fighter.name, g.fnt_battle_name, (255, 0, 0), (0, 0, 0))
-        # 绘制技能名
-        if not fighter.skill_done:
-            draw_outline_text(g.screen, fighter.skill_x,fighter.skill_y, fighter.skill_name, g.fnt_battle_name, (255, 0, 0), (0, 0, 0))
+        # 绘制技能名 # TODO:技能名称绘制，这里逻辑肯定要改
+        if fighter.state == 3:
+            draw_outline_text(g.screen, fighter.skill_x, fighter.skill_y-20, fighter.skill_name, g.fnt_battle_name,
+                              (255, 0, 0), (0, 0, 0))
 
 
 class DamageAnimation:
