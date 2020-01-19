@@ -16,7 +16,7 @@ class Player(Connection):
     """
     user_data = None
     user_last_beat = 0  # 上一次心跳时间
-    user_timeout = 600  # 心跳超时时间，秒
+    user_timeout = 30  # 心跳超时时间，秒
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,12 +37,16 @@ class Player(Connection):
             print("协议非法")
         await method(self, py_obj['data'])
 
-    async def send(self, py_obj):
+    async def send(self, name, data):
         """
-        发送数据
+        发送协议
         """
         try:
-            json_str = json.dumps(py_obj, ensure_ascii=False)
+            d = {
+                'protocol_name': name,
+                'data': data
+            }
+            json_str = json.dumps(d, ensure_ascii=False)
             print(json_str)
             await self.websocket.send(json_str)
             self.user_last_beat = time.time()

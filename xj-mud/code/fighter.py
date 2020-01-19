@@ -47,7 +47,7 @@ class Fighter:
 
         # 攻击动画相关参数
         self.move_dir = 1           # 移动方向 1正向 -1反向
-        self.speed = 0.4            # 单个方向攻击动画的时长，单位秒
+        self.speed = 0.18           # 单个方向攻击动画的时长，单位秒
         self.sin = None             # 移动方向的sin值
         self.cos = None             # 移动方向的cos值
         self.length = None          # 两点长度
@@ -102,7 +102,7 @@ class Fighter:
         """
         # 实际暴击率
         cri = self.cri - target.rcri
-        if cri <= 0:
+        if cri < 0:
             cri = 0
         is_cri = random.randint(1, 10000) <= cri
         if target.dfs >= self.atk:
@@ -131,7 +131,7 @@ class Fighter:
             for target in peer_fighters:
                 if target is None:
                     continue
-                is_cri, damage = self.attack(target)
+                is_cri, damage = self.attack(target)    # TODO:攻击加成
                 result['data'].append({
                     'is_cri': is_cri,
                     'damage': damage,

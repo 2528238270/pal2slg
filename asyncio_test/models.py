@@ -20,7 +20,21 @@ User = sa.Table(
     'user',
     metadata,
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('name', sa.String(64)),
     sa.Column('username', sa.String(32)),
     sa.Column('password', sa.String(32)),
+    sa.Column('create_time', sa.Integer),
+    sa.Column('mobile', sa.String(32)),
+    sa.Column('last_login_time', sa.Integer),
+)
+
+Player = sa.Table(
+    'player',
+    metadata,
+    sa.Column('id', sa.Integer, primary_key=True),
+    sa.Column('role_id', sa.Integer),
+    sa.Column('user_id', sa.Integer),
+    sa.Column('nickname', sa.String(32)),
+    sa.Column('coupon', sa.Integer),
+    sa.Column('create_time', sa.Integer),
+    sa.Column('last_login_time', sa.Integer),
 )
