@@ -37,6 +37,8 @@ class Server:
     __user_cls = None
     __main_loop = None
     __main_loop_obj = None
+    __init = None
+    __init_obj = None
 
     @staticmethod
     def print_log(msg):
@@ -73,6 +75,14 @@ class Server:
         """
         cls.__main_loop = sub_cls
 
+    @classmethod
+    def register_init(cls, sub_cls):
+        """
+        注册初始化对象
+        """
+        cls.__init = sub_cls
+
+
     def __init__(self, ip, port):
         """
         启动服务端
@@ -83,6 +93,8 @@ class Server:
             return
         if self.__main_loop is not None:
             self.__main_loop_obj = self.__main_loop()
+        if self.__init is not None:
+            self.__init_obj = self.__init()
         # 启动服务端
         asyncio.get_event_loop().run_until_complete(self.init_server(ip, port))
         asyncio.get_event_loop().run_forever()
@@ -93,7 +105,9 @@ class Server:
         """
         g.engine = await create_engine('postgresql://postgres:123456@47.100.44.206:5432/mud')
         start_server = websockets.serve(self.accept, ip, port)
-
+        if self.__init_obj:
+            await self.__init_obj()
+            self.print_log("初始化服务端数据成功！")
         self.print_log("服务端启动成功！")
         await asyncio.wait([start_server, self.producer_handler()])
 

@@ -1,6 +1,6 @@
 import time
 
-from api.user.sql import SQL_LOGIN
+from api.user.sql import *
 from foxy_framework.server_global import g
 from models import User
 import sqlalchemy as sa
@@ -18,10 +18,17 @@ async def login(player, data):
     password = str(data['password'])
 
     async with g.engine.acquire() as conn:
-        s = SQL_LOGIN
-        result = await conn.scalar(s, username, password)
-        if result is None:
+        user = await (await conn.execute(SQL_LOGIN, username, password)).first()
+        print(user)
+        if user is None:
             await player.send('error', {'msg': '用户名或密码错误'})
+            return
+        player.is_login = True
+        # 查看用户是否创建角色，没创建角色就让用户创建角色，已创建角色，就告诉用户登录成功
+        p = await conn.scalar(SQL_PLAYER, user[0])
+        if p is None:
+            # TODO:这里应该把每种角色类型告诉客户端
+            await player.send('to_create_player', None)
             return
 
 
