@@ -17,7 +17,9 @@ class Player(Connection):
     user_data = None
     is_login = False
     user_last_beat = 0  # 上一次心跳时间
-    user_timeout = 30  # 心跳超时时间，秒
+    user_timeout = 600  # 心跳超时时间，秒
+
+    user_id = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -78,7 +80,7 @@ class MainLoop:
                 continue
 
         g.count += 1
-        if g.count == 60*3:
+        if g.count == 60 * 3:
             Server.print_log('当前在线人数：{}'.format(len(g.clients)))
             g.count = 0
 

@@ -23,12 +23,14 @@ async def login(player, data):
         if user is None:
             await player.send('error', {'msg': '用户名或密码错误'})
             return
+        player.user_id = user[0]
         player.is_login = True
         # 查看用户是否创建角色，没创建角色就让用户创建角色，已创建角色，就告诉用户登录成功
         p = await conn.scalar(SQL_PLAYER, user[0])
         if p is None:
-            # TODO:这里应该把每种角色类型告诉客户端
-            await player.send('to_create_player', None)
+            await player.send('to_create_player',
+                              [{'id': obj['id'], 'name': obj['name'], 'description': obj['description']} for obj in
+                               g.role_list])
             return
 
 
