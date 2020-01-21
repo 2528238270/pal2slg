@@ -2,6 +2,10 @@ import tkinter as tk
 from threading import Thread
 
 
+async def login(username, password):
+    pass
+
+
 def create_window():
     window = tk.Tk()
     window.title('仙剑mud')

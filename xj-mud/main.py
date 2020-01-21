@@ -1,7 +1,11 @@
+import asyncio
 import sys
 import json
+import time
+import tkinter as tk
 
 import pygame
+import websockets
 
 from code.engine.sprite import Sprite
 from code.game_global import g
@@ -9,7 +13,7 @@ from code.fighter import Fighter, FightManager, DamageAnimation
 
 
 class Game:
-    def __init__(self, title, width, height, fps=120):
+    def __init__(self, title, width, height, fps=120, ip='127.0.0.1', port=8778):
         """
         :param title: 游戏窗口的标题
         :param width: 游戏窗口的宽度
@@ -23,7 +27,7 @@ class Game:
         self.fps = fps
         self.__init_pygame()
         self.__init_game()
-        self.update()
+        asyncio.get_event_loop().run_until_complete(self.update(ip, port))
 
     def __init_pygame(self):
         pygame.init()
@@ -70,10 +74,27 @@ class Game:
             # Fighter(5,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
         ]
         g.fight_mgr.start(g.battle_data['teammates'], g.battle_data['enemies'])
+        # 创建登录窗口
 
-    def update(self):
+    async def update(self, ip, port):
+        # task1 = asyncio.create_task(self.logic())
+        # task2 = asyncio.create_task(self.recv_data(ip, port))
+        # await task1
+        # await task2
+        uri = f'ws://{ip}:{port}/'
+        ws = await websockets.connect(uri)
+        task1 = asyncio.create_task(self.recv_data(ws))
+        task2 = asyncio.create_task(self.logic())
+        await asyncio.gather(task1, task2)
+
+    async def logic(self):
+        peer_time = 1 / self.fps
+        last_time = time.time()
         while True:
-            self.clock.tick(self.fps)
+            # print("游戏逻辑循环时间：", peer_time, time.time() - last_time)
+            last_time = time.time()
+            # self.clock.tick(self.fps)
+            await asyncio.sleep(peer_time / 2)
             # 逻辑更新
             self.event_handler()
             g.fight_mgr.logic()
@@ -82,6 +103,37 @@ class Game:
             Sprite.blit(g.screen, g.bg_title, 0, 0)
             g.fight_mgr.render()
             pygame.display.update()
+
+    async def recv_data(self, websocket):
+        """
+        接收网络数据
+        """
+        while True:
+            msg = await websocket.recv()
+            print(msg)
+            # async for msg in websocket:
+            #     print(msg)
+
+    def create_window(self):
+        window = tk.Tk()
+        window.title('仙剑mud')
+        # window.geometry('400x400')  # 这里的乘是小x
+        l1 = tk.Label(window, text='账号', font=('Arial', 12))
+        e1 = tk.Entry(window, show=None, font=('Arial', 14))
+
+        l2 = tk.Label(window, text='密码', font=('Arial', 12))
+        e2 = tk.Entry(window, show='●', font=('Arial', 14))
+
+        b_login = tk.Button(window, text='登录', font=('Arial', 12))
+        b_register = tk.Button(window, text='注册', font=('Arial', 12))
+
+        l1.grid(row=0, column=0)
+        e1.grid(row=0, column=1)
+        l2.grid(row=1, column=0)
+        e2.grid(row=1, column=1)
+        b_login.grid(row=2, column=0)
+        b_register.grid(row=2, column=1)
+        window.mainloop()
 
     def event_handler(self):
         for event in pygame.event.get():

@@ -75,10 +75,10 @@ class MainLoop:
         # 心跳检测
         now = time.time()
         for player in g.clients:
+            await player.send('ping', None)
             if now - player.user_last_beat > player.user_timeout:
                 await player.offline('心跳超时')
                 continue
-
         g.count += 1
         if g.count == 60 * 3:
             Server.print_log('当前在线人数：{}'.format(len(g.clients)))

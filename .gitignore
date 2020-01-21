@@ -2,3 +2,4 @@ xj-mud/.idea/
 xj-mud/code/__pycache__/
 *.pyc
 asyncio_test/.idea/
+h5/.idea/
