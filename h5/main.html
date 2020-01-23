@@ -10,7 +10,7 @@
 <canvas id="main" style="width:100%;height:100%;margin: 0;padding: 0;display: block"></canvas>
 <script>
     /*
-        屏幕自适应解决方案：
+        屏幕自适应解决方案1：
             1.指定游戏的一个标准分辨率，比如本游戏中就使用640*900
             2.获取屏幕的长宽：screenW,ScreenH
             3.设置canvas的宽高为screenW,ScreenH
@@ -18,13 +18,16 @@
             5.计算出canvas可用区域的长度：900*k
             6.计算绘图的y轴偏移量：dY=(ScreenH-900*k)/2
 
+        屏幕自适应解决方案2：
+            与1的步骤基本相同，但是在绘制图片时，使用双缓冲，这样就不需要多次换算
+
        根据上面的计算，我们绘图的时候需要按一定比例缩放：
        drawImg(x,y+dY,w*k,h*k)
      */
     let canvas = document.getElementById("main");
     let ctx = canvas.getContext("2d");
     let screenW = document.documentElement.clientWidth, screenH = document.documentElement.clientHeight;
-    let gameW=980,gameH=1960;
+    let gameW=640,gameH=1280;
     let k=screenW/gameW;
     let dY=(screenH-gameH*k)/2;
     canvas.width = document.documentElement.clientWidth;
