@@ -100,7 +100,6 @@ class Fighter:
         """
         普通攻击
         """
-        print(target.name, target.hp[0])
         # 实际暴击率
         cri = self.cri - target.rcri
         if cri < 0:
@@ -274,6 +273,7 @@ class FightManager:
         self.fighting = False  # 是否正在战斗
         self.fight_result = []  # 战斗结果，根据战斗结果构建动画
         self.damage_list = []  # 伤害动画列表
+        self.current_round = 1  # 当前回合数
 
     def start(self, teammates, enemies):
         """
@@ -301,7 +301,6 @@ class FightManager:
         self.wrap_fight_result()
         # 开始战斗（开始处理动画逻辑）
         self.fighting = True
-        print(json.dumps(self.fight_result))
 
     def stop(self):
         self.fighting = False
@@ -367,12 +366,12 @@ class FightManager:
         """
         if fighter.hp[0] <= 0:
             return
-        print(fighter.name,round)
         # 释放技能
         if fighter.skill is not None and round in fighter.skill['round']:
             result = fighter.do_skill(peer_fighters)
             self.fight_result.append({
                 'type': 'skill',
+                'round':round,
                 'team_type': team_type,  # 阵营 1我方 2敌方
                 'self_index': fighter.index,
                 'data': result
@@ -384,6 +383,7 @@ class FightManager:
                 is_cri, damage = fighter.attack(peer_fighter)  # 普通攻击
                 self.fight_result.append({
                     'type': 'attack',
+                    'round': round,
                     'team_type': team_type,  # 阵营 1我方 2敌方
                     'self_index': fighter.index,
                     'target_index': peer_fighter.index,
@@ -413,6 +413,9 @@ class FightManager:
             return
 
         first_data = self.fight_result[0]
+        # 更新回合数
+        g.fight_mgr.current_round = first_data['round']
+
         team_list = [None, self.render_teammates, self.render_enemies]
         if first_data['process'] == 0:  # 让第一位进入战斗状态
             first_data['process'] = 1
@@ -459,6 +462,10 @@ class FightManager:
         for damage in self.damage_list:
             damage.render()
 
+        # 绘制回合数
+        draw_outline_text(g.screen, 320, 410, '第{}回合'.format(self.current_round), g.fnt_battle_name, (255, 255, 255),
+                          (255, 0, 0))
+
     def draw_hero(self, fighter):
         """
         绘制英雄
@@ -485,7 +492,7 @@ class FightManager:
         # 绘制技能名 # TODO:技能名称绘制，这里逻辑肯定要改
         if fighter.state == 3:
             draw_outline_text(g.screen, fighter.skill_x, fighter.skill_y - 20, fighter.skill_name, g.fnt_battle_name,
-                              (255, 0, 0), (255, 242, 0))
+                              (255, 255, 255), (255, 0, 0))
 
 
 class DamageAnimation:
