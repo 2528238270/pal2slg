@@ -3,11 +3,6 @@ canvas.onmouseup = mouseUp;
 canvas.onmousemove = mouseMove;
 let timer = setInterval(mainLoop, 32);      //60FPS
 
-function storyChangeScene(scene) {
-    storyScene = scene;     //故事模式的场景，也就是地图编号
-    sceneImg = NewImage('./image/all_scene/' + storyScene + '.jpg', 640, 480);
-}
-
 function mainLoop() {
     //全局的逻辑
     fadeManager.logic();

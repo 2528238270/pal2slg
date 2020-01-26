@@ -15,29 +15,29 @@ class Fighter:
     """
     attr = ['level', 'hp', 'atk', 'dfs', 'hit', 'cri', 'dod', 'rcri']
 
-    def __init__(self, index, team_type, name, level, hp, atk, dfs, hit, cri, dod, rcri,skill_id=None):
-        self.name = name                        # 英雄姓名
-        self.level = level                      # 等级
-        self.hp = hp                            # 生命值
-        self.atk = atk                          # 攻击力
-        self.dfs = dfs                          # 防御力
-        self.hit = hit                          # 命中率
-        self.cri = cri                          # 暴击率
-        self.dod = dod                          # 闪避率
-        self.rcri = rcri                        # 抗暴击率
-        self.debuff = []                        # 减益效果
-        self.buff = []                          # 增益效果
+    def __init__(self, index, team_type, name, level, hp, atk, dfs, hit, cri, dod, rcri, skill_id=None):
+        self.name = name  # 英雄姓名
+        self.level = level  # 等级
+        self.hp = hp  # 生命值
+        self.atk = atk  # 攻击力
+        self.dfs = dfs  # 防御力
+        self.hit = hit  # 命中率
+        self.cri = cri  # 暴击率
+        self.dod = dod  # 闪避率
+        self.rcri = rcri  # 抗暴击率
+        self.debuff = []  # 减益效果
+        self.buff = []  # 增益效果
         if skill_id is not None:
-            self.skill = g.skill_data[skill_id-1]   # 技能
+            self.skill = g.skill_data[skill_id - 1]  # 技能
         else:
             self.skill = None
 
-        self.team_type = team_type      # 队伍类型 1我方 2敌方
-        self.index = index              # 在队伍中的位置
-        if team_type == 1:              # 我方位置
+        self.team_type = team_type  # 队伍类型 1我方 2敌方
+        self.index = index  # 在队伍中的位置
+        if team_type == 1:  # 我方位置
             self.box_x = 160 - int(index / 3) * 140
             self.box_y = 5 + (index % 3 + 1) * 90
-        else:                           # 敌方位置
+        else:  # 敌方位置
             self.box_x = 350 + int(index / 3) * 140
             self.box_y = 5 + (index % 3 + 1) * 90
 
@@ -46,27 +46,27 @@ class Fighter:
         self.y = self.box_y
 
         # 攻击动画相关参数
-        self.move_dir = 1           # 移动方向 1正向 -1反向
-        self.speed = 0.18           # 单个方向攻击动画的时长，单位秒
-        self.sin = None             # 移动方向的sin值
-        self.cos = None             # 移动方向的cos值
-        self.length = None          # 两点长度
-        self.l = None               # 单位长度
-        self.d_l = 0                # 实时长度
-        self.flag_x = 1             # x方向
-        self.flag_y = 1             # y方向
+        self.move_dir = 1  # 移动方向 1正向 -1反向
+        self.speed = 0.3  # 单个方向攻击动画的时长，单位秒
+        self.sin = None  # 移动方向的sin值
+        self.cos = None  # 移动方向的cos值
+        self.length = None  # 两点长度
+        self.l = None  # 单位长度
+        self.d_l = 0  # 实时长度
+        self.flag_x = 1  # x方向
+        self.flag_y = 1  # y方向
 
         # 被攻击动画相关参数
-        self.state = 0              # 状态 0普通状态 1被攻击状态 2攻击状态 3技能释放状态
-        self.move_len = 10          # 被攻击后退距离
-        self.attacked_dir = -1      # 移动方向 -1后退 1前进
-        self.current_len = 0        # 已移动长度
+        self.state = 0  # 状态 0普通状态 1被攻击状态 2攻击状态 3技能释放状态
+        self.move_len = 10  # 被攻击后退距离
+        self.attacked_dir = -1  # 移动方向 -1后退 1前进
+        self.current_len = 0  # 已移动长度
 
         # 技能动画相关
-        self.skill_time = 0.5                                 # 显示多久
-        self.skill_count = int(g.fps * self.skill_time)     # 需要经过多少帧
-        self.skill_counter = 0                              # 计数过了多少帧
-        self.skill_alpha = 255                              # 不透明度 
+        self.skill_time = 0.5  # 显示多久
+        self.skill_count = int(g.fps * self.skill_time)  # 需要经过多少帧
+        self.skill_counter = 0  # 计数过了多少帧
+        self.skill_alpha = 255  # 不透明度
         self.skill_x = None
         self.skill_y = None
         if self.skill:
@@ -100,6 +100,7 @@ class Fighter:
         """
         普通攻击
         """
+        print(target.name, target.hp[0])
         # 实际暴击率
         cri = self.cri - target.rcri
         if cri < 0:
@@ -131,7 +132,7 @@ class Fighter:
             for target in peer_fighters:
                 if target is None:
                     continue
-                is_cri, damage = self.attack(target)    # TODO:攻击加成
+                is_cri, damage = self.attack(target)  # TODO:攻击加成
                 result['data'].append({
                     'is_cri': is_cri,
                     'damage': damage,
@@ -154,10 +155,10 @@ class Fighter:
         aoe技能释放
         """
         for d in self.current_data['data']['data']:
-            if self.team_type==1:
-                target=g.fight_mgr.render_enemies[d['target_index']]
+            if self.team_type == 1:
+                target = g.fight_mgr.render_enemies[d['target_index']]
             else:
-                target=g.fight_mgr.render_teammates[d['target_index']]
+                target = g.fight_mgr.render_teammates[d['target_index']]
             target.be_attack(d)
 
     def skill_logic(self):
@@ -169,7 +170,7 @@ class Fighter:
 
         if self.skill_counter == 0:
             self.aoe()
-        
+
         self.skill_counter += 1
 
         if self.skill_counter >= self.skill_count:
@@ -266,13 +267,13 @@ class FightManager:
     total_round = 20  # 最多战斗20个回合，如果20回合内没分出胜负，那么就算输了
 
     def __init__(self):
-        self.teammates = [None] * 6             # 我方阵营
-        self.enemies = [None] * 6               # 敌方阵营
-        self.render_teammates = [None] * 6      # 渲染用的列表
-        self.render_enemies = [None] * 6        # 渲染用的列表
-        self.fighting = False                   # 是否正在战斗
-        self.fight_result = []                  # 战斗结果，根据战斗结果构建动画
-        self.damage_list = []                   # 伤害动画列表
+        self.teammates = [None] * 6  # 我方阵营
+        self.enemies = [None] * 6  # 敌方阵营
+        self.render_teammates = [None] * 6  # 渲染用的列表
+        self.render_enemies = [None] * 6  # 渲染用的列表
+        self.fighting = False  # 是否正在战斗
+        self.fight_result = []  # 战斗结果，根据战斗结果构建动画
+        self.damage_list = []  # 伤害动画列表
 
     def start(self, teammates, enemies):
         """
@@ -300,6 +301,7 @@ class FightManager:
         self.wrap_fight_result()
         # 开始战斗（开始处理动画逻辑）
         self.fighting = True
+        print(json.dumps(self.fight_result))
 
     def stop(self):
         self.fighting = False
@@ -336,6 +338,16 @@ class FightManager:
                     # 敌人攻击逻辑
                     self.attack(i, 2, enemy, self.teammates)
 
+                # 每个人结束动作后，遍历一遍所有人，把血量小于等于0的对象删除
+                for i in range(6):
+                    # 取当前战斗对象
+                    teammate = self.teammates[i]
+                    enemy = self.enemies[i]
+                    if teammate is not None and teammate.hp[0] <= 0:
+                        self.teammates[i] = None
+                    if enemy is not None and enemy.hp[0] <= 0:
+                        self.enemies[i] = None
+
             # TODO:判断战斗是否结束，看看哪边阵营全是空
             if not any(self.teammates):
                 # TODO:我方失败
@@ -355,7 +367,7 @@ class FightManager:
         """
         if fighter.hp[0] <= 0:
             return
-        
+
         # 释放技能
         if fighter.skill is not None and round in fighter.skill['round']:
             result = fighter.do_skill(peer_fighters)
@@ -370,9 +382,6 @@ class FightManager:
         for peer_fighter in peer_fighters:
             if peer_fighter is not None:
                 is_cri, damage = fighter.attack(peer_fighter)  # 普通攻击
-                if peer_fighter.hp[0] <= 0:
-                    peer_fighter.hp[0] = 0
-                    peer_fighters[peer_fighter.index] = None
                 self.fight_result.append({
                     'type': 'attack',
                     'team_type': team_type,  # 阵营 1我方 2敌方
@@ -457,7 +466,7 @@ class FightManager:
         box_x = fighter.x
         box_y = fighter.y
         # 绘制边框
-        if fighter.state in [0,2,3]:
+        if fighter.state in [0, 2, 3]:
             Sprite.blit(g.screen, g.bg_hero_1, box_x, box_y)
         elif fighter.state in [1]:
             Sprite.blit(g.screen, g.bg_hero_2, box_x, box_y)
@@ -475,7 +484,7 @@ class FightManager:
         draw_outline_text(g.screen, box_x + 2 + 60, box_y + 10, fighter.name, g.fnt_battle_name, (255, 0, 0), (0, 0, 0))
         # 绘制技能名 # TODO:技能名称绘制，这里逻辑肯定要改
         if fighter.state == 3:
-            draw_outline_text(g.screen, fighter.skill_x, fighter.skill_y-20, fighter.skill_name, g.fnt_battle_name,
+            draw_outline_text(g.screen, fighter.skill_x, fighter.skill_y - 20, fighter.skill_name, g.fnt_battle_name,
                               (255, 0, 0), (0, 0, 0))
 
 
@@ -572,11 +581,11 @@ class DamageAnimation:
 
         self.done = False
         self.move_length = 50
-        self.current_length = 0                 # 当前移动长度
-        self.time = 0.5                         # 伤害显示出来之后暂停多久
-        self.count = int(g.fps * self.time)     # 1秒需要经过多少帧
-        self.counter = 0                        # 计数过了多少帧
-        self.alpha = 255                        # 不透明度 
+        self.current_length = 0  # 当前移动长度
+        self.time = 0.5  # 伤害显示出来之后暂停多久
+        self.count = int(g.fps * self.time)  # 1秒需要经过多少帧
+        self.counter = 0  # 计数过了多少帧
+        self.alpha = 255  # 不透明度
 
     def render(self):
         """
@@ -592,8 +601,8 @@ class DamageAnimation:
             return
         self.counter += 1
         if self.counter < self.count:
-            return 
-        
+            return
+
         self.y -= 1
         self.current_length += 1
         self.alpha -= 5

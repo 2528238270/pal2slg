@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script src="./CanvasInput.js"></script>
+    <script src="js/CanvasInput.js"></script>
     <script src="./js/draw_base.js"></script>
 </head>
 <body style="width:100%;height:100%;margin: 0;padding: 0;">
@@ -34,7 +34,12 @@
     canvas.height = document.documentElement.clientHeight;
     let timer = setInterval(mainLoop, 32);      //60FPS
     let testImg = NewImage('./test.png', 200, 250);
-
+    canvas.addEventListener('touchstart', (e) => {
+        console.log(e);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+        console.log(e);
+    });
     function mainLoop() {
         drawFillRect(ctx, '#000', 0, 0, canvas.width, canvas.height);
         drawFillRect(ctx, '#FF00FF', 0, dY, canvas.width, gameH*k);
