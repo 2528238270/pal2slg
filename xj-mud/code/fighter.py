@@ -63,7 +63,7 @@ class Fighter:
         self.current_len = 0  # 已移动长度
 
         # 技能动画相关
-        self.skill_time = 0.5  # 显示多久
+        self.skill_time = 1.5  # 显示多久
         self.skill_count = int(g.fps * self.skill_time)  # 需要经过多少帧
         self.skill_counter = 0  # 计数过了多少帧
         self.skill_alpha = 255  # 不透明度
@@ -339,14 +339,14 @@ class FightManager:
                     self.attack(i, 2, enemy, self.teammates)
 
                 # 每个人结束动作后，遍历一遍所有人，把血量小于等于0的对象删除
-                for i in range(6):
+                for k in range(6):
                     # 取当前战斗对象
-                    teammate = self.teammates[i]
-                    enemy = self.enemies[i]
+                    teammate = self.teammates[k]
+                    enemy = self.enemies[k]
                     if teammate is not None and teammate.hp[0] <= 0:
-                        self.teammates[i] = None
+                        self.teammates[k] = None
                     if enemy is not None and enemy.hp[0] <= 0:
-                        self.enemies[i] = None
+                        self.enemies[k] = None
 
             # TODO:判断战斗是否结束，看看哪边阵营全是空
             if not any(self.teammates):
@@ -367,7 +367,7 @@ class FightManager:
         """
         if fighter.hp[0] <= 0:
             return
-
+        print(fighter.name,round)
         # 释放技能
         if fighter.skill is not None and round in fighter.skill['round']:
             result = fighter.do_skill(peer_fighters)
@@ -485,7 +485,7 @@ class FightManager:
         # 绘制技能名 # TODO:技能名称绘制，这里逻辑肯定要改
         if fighter.state == 3:
             draw_outline_text(g.screen, fighter.skill_x, fighter.skill_y - 20, fighter.skill_name, g.fnt_battle_name,
-                              (255, 0, 0), (0, 0, 0))
+                              (255, 0, 0), (255, 242, 0))
 
 
 class DamageAnimation:
