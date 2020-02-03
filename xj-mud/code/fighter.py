@@ -63,7 +63,7 @@ class Fighter:
         self.current_len = 0  # 已移动长度
 
         # 技能动画相关
-        self.skill_time = 1.5  # 显示多久
+        self.skill_time = 1  # 显示多久
         self.skill_count = int(g.fps * self.skill_time)  # 需要经过多少帧
         self.skill_counter = 0  # 计数过了多少帧
         self.skill_alpha = 255  # 不透明度

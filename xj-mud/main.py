@@ -1,15 +1,12 @@
-import asyncio
 import sys
 import json
-import time
-import tkinter as tk
 
 import pygame
-import websockets
 
+from code import start_scene
 from code.engine.sprite import Sprite
-from code.game_global import g
-from code.fighter import Fighter, FightManager, DamageAnimation
+from code.game_global import g, ENUM_SCENE
+from code.fighter import Fighter, FightManager
 
 
 class Game:
@@ -36,7 +33,8 @@ class Game:
         self.clock = pygame.time.Clock()
 
     def __init_game(self):
-        g.fps = self.fps
+        g.fps = self.fps  # 设置fps
+        # 加载所需资源
         g.fnt_hp = pygame.font.Font('./resource/font/font1.TTF', 16)
         g.fnt_battle_name = pygame.font.Font('./resource/font/font1.TTF', 24)
         g.bg = pygame.image.load('./resource/dazhuzai/login_bg_60b2432a.png').convert_alpha()
@@ -48,52 +46,65 @@ class Game:
         g.hp_bar = pygame.image.load('./resource/dazhuzai/hp_bar.png').convert_alpha()
         g.mp_bar = pygame.image.load('./resource/dazhuzai/mp_bar.png').convert_alpha()
         g.ry_fnt = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
+        g.bg_enter = pygame.image.load('./resource/PicLib/all_sys/login.png').convert_alpha()
+        g.btn1 = pygame.image.load('./resource/PicLib/all_sys/btn1.png').convert_alpha()
+        g.btn2 = pygame.image.load('./resource/PicLib/all_sys/btn2.png').convert_alpha()
+        g.btn3 = pygame.image.load('./resource/PicLib/all_sys/btn3.png').convert_alpha()
+        g.btn4 = pygame.image.load('./resource/PicLib/all_sys/btn4.png').convert_alpha()
+        g.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
+        g.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
         with open('./resource/skill.json', mode='r', encoding='utf8') as file:
             g.skill_data = json.loads(file.read())
         g.fight_mgr = FightManager()
         g.screen = self.screen
-        g.battle_data['teammates'] = [
-            Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0, 1),
-            Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0),
-            Fighter(0, 1, '苏媚', 3, [999, 999], 1500, 10, 10000, 2000, 0, 0, 4),
-            Fighter(4, 1, '李忆如', 4, [999, 999], 800, 10, 10000, 2000, 0, 0),
-            # Fighter(4, 1, '赵日天', 5, [9999, 9999], 9999, 10, 10000, 10000, 0, 0)
-        ]
-        g.battle_data['enemies'] = [
-            Fighter(1, 2, '千叶禅师', 1, [99999, 99999], 40, 1, 10000, 2000, 0, 0),
-            Fighter(2, 2, '喻南松', 1, [20000, 20000], 20, 1, 10000, 2000, 0, 0),
-            # Fighter(2, 2, '水魔兽', 1, [50000, 50000], 30, 1, 10000, 2000, 0, 0),
-            # Fighter(3, 2, '水魔兽', 1, [50000, 50000], 30, 1, 10000, 2000, 0, 0),
-            # Fighter(4, 2, '水魔兽', 1, [50000, 50000], 30, 1, 10000, 2000, 0, 0),
-            # Fighter(5, 2, '水魔兽', 1, [50000, 50000], 30, 1, 10000, 2000, 0, 0),
-
-            # Fighter(3,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
-            # Fighter(4,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
-            # Fighter(5,2,'赵日天13',1,[100,100],10,1,10000,2000,0,0),
-        ]
-        g.fight_mgr.start(g.battle_data['teammates'], g.battle_data['enemies'])
-        # 创建登录窗口
+        # 初始化游戏的一些变量
+        g.scene_id = ENUM_SCENE.START_SCENE
+        # g.battle_data['teammates'] = [
+        #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
+        #     Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0, 1),
+        #     Fighter(0, 1, '苏媚', 3, [999, 999], 1500, 10, 10000, 2000, 0, 0, 4),
+        #     Fighter(4, 1, '李忆如', 4, [999, 999], 800, 10, 10000, 2000, 0, 0, 4),
+        # ]
+        # g.battle_data['enemies'] = [
+        #     Fighter(1, 2, '千叶禅师', 1, [99999, 99999], 40, 1, 10000, 2000, 0, 0),
+        #     Fighter(2, 2, '喻南松', 1, [20000, 20000], 20, 1, 10000, 2000, 0, 0),
+        # ]
+        # g.fight_mgr.start(g.battle_data['teammates'], g.battle_data['enemies'])
 
     def update(self):
         while True:
             self.clock.tick(self.fps)
-            # 逻辑更新
-            self.event_handler()
-            g.fight_mgr.logic()
-            # 画面更新
-            Sprite.blit(g.screen, g.bg, 0, 0)
-            Sprite.blit(g.screen, g.bg_title, 0, 0)
-            g.fight_mgr.render()
+            if g.scene_id == ENUM_SCENE.START_SCENE:
+                start_scene.logic()
+                self.event_handler()
+                start_scene.render()
+            elif g.scene_id == ENUM_SCENE.GAME_SCENE:
+                # 逻辑更新
+                g.fight_mgr.logic()
+                # 画面更新
+                Sprite.blit(g.screen, g.bg, 0, 0)
+                Sprite.blit(g.screen, g.bg_title, 0, 0)
+                g.fight_mgr.render()
+
             pygame.display.update()
 
     def event_handler(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-
-
+        x, y = pygame.mouse.get_pos()
+        if g.scene_id == ENUM_SCENE.START_SCENE:
+            try:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        sys.exit()
+                    elif event.type == pygame.MOUSEMOTION:
+                        start_scene.mouse_move(x, y)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        start_scene.mouse_down(x, y)
+                    elif event.type == pygame.MOUSEBUTTONUP:
+                        start_scene.mouse_up(x, y)
+            except:
+                pass
 if __name__ == '__main__':
-    Game("仙剑奇侠传二", 640, 900)
+    Game("仙剑奇侠传二", 640, 480, 60)
     # Game("仙剑", 1, 1)
