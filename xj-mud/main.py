@@ -3,10 +3,12 @@ import json
 
 import pygame
 
-from code import start_scene
+from code import scenes
+from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.fighter import Fighter, FightManager
+from code.scenes import StartScene
 
 
 class Game:
@@ -58,9 +60,11 @@ class Game:
         with open('./resource/skill.json', mode='r', encoding='utf8') as file:
             g.skill_data = json.loads(file.read())
         g.fight_mgr = FightManager()
-        g.screen = self.screen
-        # 初始化游戏的一些变量
+        g.scene_mgr = SceneManager()
+        g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         g.scene_id = ENUM_SCENE.START_SCENE
+        g.screen = self.screen
+
         # g.battle_data['teammates'] = [
         #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
         #     Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0, 1),
@@ -76,35 +80,38 @@ class Game:
     def update(self):
         while True:
             self.clock.tick(self.fps)
-            if g.scene_id == ENUM_SCENE.START_SCENE:
-                start_scene.logic()
-                self.event_handler()
-                start_scene.render()
-            elif g.scene_id == ENUM_SCENE.GAME_SCENE:
-                # 逻辑更新
-                g.fight_mgr.logic()
-                # 画面更新
-                Sprite.blit(g.screen, g.bg, 0, 0)
-                Sprite.blit(g.screen, g.bg_title, 0, 0)
-                g.fight_mgr.render()
+            scene = g.scene_mgr.find_scene_by_id(g.scene_id)
+            self.event_handler()
+            scene.logic()
+            scene.render()
+            # if g.scene_id == ENUM_SCENE.START_SCENE:
+            #     scenes.logic()
+            #     self.event_handler()
+            #     scenes.render()
+            # elif g.scene_id == ENUM_SCENE.GAME_SCENE:
+            #     # 逻辑更新
+            #     g.fight_mgr.logic()
+            #     # 画面更新
+            #     Sprite.blit(g.screen, g.bg, 0, 0)
+            #     Sprite.blit(g.screen, g.bg_title, 0, 0)
+            #     g.fight_mgr.render()
 
             pygame.display.update()
 
     def event_handler(self):
         x, y = pygame.mouse.get_pos()
-        if g.scene_id == ENUM_SCENE.START_SCENE:
-            try:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        sys.exit()
-                    elif event.type == pygame.MOUSEMOTION:
-                        start_scene.mouse_move(x, y)
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        start_scene.mouse_down(x, y)
-                    elif event.type == pygame.MOUSEBUTTONUP:
-                        start_scene.mouse_up(x, y)
-            except:
-                pass
+        scene = g.scene_mgr.find_scene_by_id(g.scene_id)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEMOTION:
+                scene.mouse_move(x, y)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                scene.mouse_down(x, y)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                scene.mouse_up(x, y)
+
+
 if __name__ == '__main__':
     Game("仙剑奇侠传二", 640, 480, 60)
     # Game("仙剑", 1, 1)
