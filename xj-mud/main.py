@@ -31,6 +31,7 @@ class Game:
     def __init_pygame(self):
         pygame.init()
         pygame.display.set_caption(self.title)
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode([self.width, self.height])
         self.clock = pygame.time.Clock()
 
@@ -55,6 +56,8 @@ class Game:
         g.btn4 = pygame.image.load('./resource/PicLib/all_sys/btn4.png').convert_alpha()
         g.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
         g.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
+        pygame.mixer.music.load('./resource/music/login.mp3')
+        pygame.mixer.music.play(-1)
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
         with open('./resource/skill.json', mode='r', encoding='utf8') as file:
