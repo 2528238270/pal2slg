@@ -18,7 +18,9 @@ class GameMap:
         self.h = 0
         self.size_w = 0
         self.size_h = 0
-        self.npc_list = []  # npc列表
+        self.x = 0  # 绘图坐标
+        self.y = 0
+        # self.npc_list = []  # npc列表
 
     def load(self, map_id):
         """

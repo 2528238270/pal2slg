@@ -6,7 +6,8 @@ import pygame
 from code.engine.gui import Button
 from code.engine.scene import Scene
 from code.engine.sprite import Sprite
-from code.game_global import g
+from code.game_global import g, ENUM_SCENE
+from code.game_map import GameMap
 
 
 class StartScene(Scene):
@@ -20,7 +21,7 @@ class StartScene(Scene):
         self.count = 0
         self.bg = None
         # 创建按钮
-        self.btn_new_game = Button(230, 270, imgNormal=g.btn1, imgMove=g.btn2, callBackFunc=g.fade.start)
+        self.btn_new_game = Button(230, 270, imgNormal=g.btn1, imgMove=g.btn2, callBackFunc=self.new_game)
         self.btn_old_game = Button(230, 320, imgNormal=g.btn3, imgMove=g.btn4, callBackFunc=g.fade.start)
         self.btn_exit_game = Button(230, 370, imgNormal=g.btn5, imgMove=g.btn6, callBackFunc=g.fade.start)
 
@@ -91,3 +92,44 @@ class StartScene(Scene):
         self.btn_new_game.get_focus(x, y)
         self.btn_old_game.get_focus(x, y)
         self.btn_exit_game.get_focus(x, y)
+
+    def new_game(self):
+        """
+        开始新游戏
+        """
+
+        def temp():
+            g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
+            g.scene_id = ENUM_SCENE.GAME_SCENE
+
+        g.fade.start(temp)
+
+
+class GameScene(Scene):
+    """
+    游戏场景
+    """
+
+    def __init__(self, scene_id, load_save=False):
+        super().__init__(scene_id=scene_id)
+        self.game_map = GameMap()
+        if not load_save:
+            # 新游戏
+            self.game_map.load(1)
+            pass
+
+    def logic(self):
+        pass
+
+    def render(self):
+        Sprite.blit(g.screen, self.game_map.btm_img, 0, 0)
+        Sprite.blit(g.screen, self.game_map.top_img, 0, 0)
+
+    def mouse_down(self, x, y):
+        pass
+
+    def mouse_move(self, x, y):
+        pass
+
+    def mouse_up(self, x, y):
+        pass

@@ -73,9 +73,9 @@ class Game:
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
         g.scene_id = ENUM_SCENE.START_SCENE
-        g.game_map = GameMap()
-        g.game_map.load(1)
-        g.game_map.enter_point.debug_show()
+        # g.game_map = GameMap()
+        # g.game_map.load(1)
+        # g.game_map.enter_point.debug_show()
         # g.battle_data['teammates'] = [
         #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
         #     Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0, 1),
