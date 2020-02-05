@@ -32,6 +32,8 @@ class Global:
     skill_data = []  # 技能数据
     fight_mgr = None  # 战斗管理器
     scene_mgr = None  # 场景管理器
+    animator = None  # 动画管理器
+    fade = None     # 淡入淡出功能
     scene_id = 0  # 场景id
 
     def __new__(cls, *args, **kwargs):

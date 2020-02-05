@@ -20,9 +20,9 @@ class StartScene(Scene):
         self.count = 0
         self.bg = None
         # 创建按钮
-        self.btn_new_game = Button(230, 270, imgNormal=g.btn1, imgMove=g.btn2)
-        self.btn_old_game = Button(230, 320, imgNormal=g.btn3, imgMove=g.btn4)
-        self.btn_exit_game = Button(230, 370, imgNormal=g.btn5, imgMove=g.btn6)
+        self.btn_new_game = Button(230, 270, imgNormal=g.btn1, imgMove=g.btn2, callBackFunc=g.fade.start)
+        self.btn_old_game = Button(230, 320, imgNormal=g.btn3, imgMove=g.btn4, callBackFunc=g.fade.start)
+        self.btn_exit_game = Button(230, 370, imgNormal=g.btn5, imgMove=g.btn6, callBackFunc=g.fade.start)
 
         cap1 = cv2.VideoCapture("./resource/Video/StartMenu.avi")
         cap2 = cv2.VideoCapture("./resource/Video/MenuLoop.avi")

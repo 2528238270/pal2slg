@@ -4,6 +4,7 @@ import json
 import pygame
 
 from code import scenes
+from code.engine.animation import Animator, Fade
 from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
@@ -56,17 +57,21 @@ class Game:
         g.btn4 = pygame.image.load('./resource/PicLib/all_sys/btn4.png').convert_alpha()
         g.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
         g.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
+        g.sm_walk = pygame.image.load('./resource/PicLib/all_char/0.png').convert_alpha()
         pygame.mixer.music.load('./resource/music/login.mp3')
         pygame.mixer.music.play(-1)
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
         with open('./resource/skill.json', mode='r', encoding='utf8') as file:
             g.skill_data = json.loads(file.read())
+        g.screen = self.screen
         g.fight_mgr = FightManager()
         g.scene_mgr = SceneManager()
+        g.animator = Animator(self.screen)
+        g.fade = Fade(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
+        g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [0, 7])
         g.scene_id = ENUM_SCENE.START_SCENE
-        g.screen = self.screen
 
         # g.battle_data['teammates'] = [
         #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
@@ -84,9 +89,13 @@ class Game:
         while True:
             self.clock.tick(self.fps)
             scene = g.scene_mgr.find_scene_by_id(g.scene_id)
+            g.fade.logic()
             self.event_handler()
+            g.animator.update()
             scene.logic()
             scene.render()
+            g.animator.draw()
+            g.fade.draw()
             # if g.scene_id == ENUM_SCENE.START_SCENE:
             #     scenes.logic()
             #     self.event_handler()
