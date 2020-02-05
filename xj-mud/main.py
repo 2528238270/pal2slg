@@ -9,6 +9,7 @@ from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.fighter import Fighter, FightManager
+from code.game_map import GameMap
 from code.scenes import StartScene
 
 
@@ -70,9 +71,11 @@ class Game:
         g.animator = Animator(self.screen)
         g.fade = Fade(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
-        g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [0, 7])
+        g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
         g.scene_id = ENUM_SCENE.START_SCENE
-
+        g.game_map = GameMap()
+        g.game_map.load(1)
+        g.game_map.enter_point.debug_show()
         # g.battle_data['teammates'] = [
         #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
         #     Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0, 1),
