@@ -1,5 +1,6 @@
 import pygame
 
+from code.engine.a_star import AStar
 from code.engine.animation import Animation
 from code.engine.sprite import Sprite
 from code.game_global import g
@@ -10,7 +11,7 @@ class Walker:
     行走者，8个方向的行走图
     """
     config = {
-        0: [56, 96]
+        0: [56, 96, 6]
     }
 
     def __init__(self, walker_id, mx, my):
@@ -25,14 +26,15 @@ class Walker:
         # 根据walker_id获取不同的cell_w,cell_h的参数
         self.cell_w = self.config[walker_id][0]
         self.cell_h = self.config[walker_id][1]
+        self.offset_y = self.config[walker_id][2]
         # 渲染坐标
-        self.render_x = int(self.x - self.cell_w / 2)
-        self.render_y = self.y - self.cell_h
+        self.render_x = int(self.x - self.cell_w / 2) + 8
+        self.render_y = self.y - self.cell_h + self.offset_y + 16
         # 加载动画
         self.walker_img = pygame.image.load(f'./resource/PicLib/all_char/{walker_id}.png').convert_alpha()
         self.animations = []
         for i in range(8):
-            animation = Animation(self.render_x, self.render_y, self.walker_img, self.cell_w, self.cell_h, 1000, True,
+            animation = Animation(self.render_x, self.render_y, self.walker_img, self.cell_w, self.cell_h, 700, True,
                                   [9 * i, 9 * (i + 1) - 1])
             self.animations.append(animation)
         # 初始化面向
@@ -48,12 +50,13 @@ class Walker:
         self.path_index = 0
 
     def logic(self):
-        if not self.walking:
-            return
         # 更新动画
-        self.animations[self.face].update()
+        if self.walking:
+            self.animations[self.face].update()
         # 移动
         self.move()
+        # 自动走下一步
+        self.auto_goto()
 
     def render(self):
         """
@@ -94,9 +97,10 @@ class Walker:
             self.walking = False
 
     def move(self):
+        if not self.walking:
+            return
         dest_x = self.next_mx * 16
         dest_y = self.next_my * 16
-
         # 向目标位置靠近
         if self.x < dest_x:
             self.x += self.step
@@ -117,8 +121,8 @@ class Walker:
                 self.y = dest_y
 
         # 更新渲染坐标
-        self.render_x = int(self.x - self.cell_w / 2)
-        self.render_y = self.y - self.cell_h
+        self.render_x = int(self.x - self.cell_w / 2) + 8
+        self.render_y = self.y - self.cell_h + self.offset_y + 16
 
         # 角色当前位置
         self.mx = int(self.x / 16)
@@ -127,3 +131,36 @@ class Walker:
         # 到达了目标点
         if self.x == dest_x and self.y == dest_y:
             self.walking = False
+
+    def find_path(self, map2d, end_point):
+        """
+        :param map2d: 地图
+        :param end_point: 寻路终点
+        """
+        if end_point[0] == self.mx and end_point[1] == self.my:
+            return
+
+        start_point = (self.mx, self.my)
+        path = AStar(map2d, start_point, end_point).start()
+        if path is None:
+            return
+
+        self.path = path
+        self.path_index = 0
+
+    def auto_goto(self):
+        """
+        自动寻路
+        """
+        if self.walking:
+            return
+        # 如果寻路走到终点了
+        if self.path_index == len(self.path):
+            self.path = []
+            self.path_index = 0
+            # self.walking = False
+        # 如果没走到终点，就往下一个格子走
+        else:
+            self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
+            self.path_index += 1
+            # self.walking = True

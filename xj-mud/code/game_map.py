@@ -44,7 +44,7 @@ class GameMap:
         with open(f'./resource/PicLib/all_map/{map_id}.Redrawmap') as file:
             for x in range(self.w):
                 for y in range(self.h):
-                    self.walk_data[x][y] = int(file.readline())
+                    self.redraw_data[x][y] = int(file.readline())
 
         with open(f'./resource/PicLib/all_map/{map_id}.Enterpos', mode='rb') as file:
             data = file.read()

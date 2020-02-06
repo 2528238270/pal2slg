@@ -8,7 +8,7 @@ from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.fighter import Fighter, FightManager
-from code.scenes import StartScene
+from code.scenes import StartScene, GameScene
 from code.walker import Walker
 
 
@@ -70,12 +70,9 @@ class Game:
         g.animator = Animator(self.screen)
         g.fade = Fade(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
-        g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
-        g.sm_walker = Walker(0, 15, 15)
-        g.sm_walker.walking = False
-        g.sm_walker.face = 0
-        g.sm_walker.goto(10,10)
-        g.scene_id = ENUM_SCENE.START_SCENE
+        g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
+        # g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
+        g.scene_id = ENUM_SCENE.GAME_SCENE
         # g.game_map = GameMap()
         # g.game_map.load(1)
         # g.game_map.enter_point.debug_show()
@@ -98,11 +95,9 @@ class Game:
             g.fade.logic()
             self.event_handler()
             g.animator.update()
-            g.sm_walker.logic()
             scene.logic()
             scene.render()
             g.animator.draw()
-            g.sm_walker.render()
             g.fade.draw()
             # if g.scene_id == ENUM_SCENE.START_SCENE:
             #     scenes.logic()

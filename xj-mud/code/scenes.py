@@ -8,12 +8,13 @@ from code.engine.scene import Scene
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
+from code.walker import Walker
 
 
 class StartScene(Scene):
     def __init__(self, scene_id):
         super().__init__(scene_id=scene_id)
-        self.video_state = 0  # 0开场动画没放完 1开场动画放完了 2正在播放循环动画
+        self.video_state = 1  # 0开场动画没放完 1开场动画放完了 2正在播放循环动画
         self.video1 = []
         self.video1_speed = 0
         self.video2 = []
@@ -116,16 +117,31 @@ class GameScene(Scene):
         if not load_save:
             # 新游戏
             self.game_map.load(1)
+            self.sm_walker = Walker(0, 15, 15)
 
     def logic(self):
-        pass
+        self.sm_walker.logic()
 
     def render(self):
         Sprite.blit(g.screen, self.game_map.btm_img, 0, 0)
+        self.sm_walker.render()
         Sprite.blit(g.screen, self.game_map.top_img, 0, 0)
+        # debug
+        for x in range(self.game_map.w):
+            for y in range(self.game_map.h):
+                if self.game_map.walk_data[x][y] == 0:  # 不是障碍，画空心的矩形
+                    pygame.draw.rect(g.screen, (255, 255, 255),
+                                     (self.game_map.x + x * 16, self.game_map.y + y * 16, 16, 16), 1)
+                    pass
+                else:  # 是障碍，画黑色实心的矩形
+                    pygame.draw.rect(g.screen, (255, 255, 255),
+                                     (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
     def mouse_down(self, x, y):
-        pass
+        mx = int((x - self.game_map.x) / 16)
+        my = int((y - self.game_map.y) / 16)
+        # print(mx, my)
+        self.sm_walker.find_path(self.game_map.walk_data, [mx, my])
 
     def mouse_move(self, x, y):
         pass

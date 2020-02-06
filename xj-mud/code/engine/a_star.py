@@ -15,6 +15,9 @@ class Point:
     def __str__(self):
         return "x:" + str(self.x) + ",y:" + str(self.y)
 
+    def __repr__(self):
+        return "x:" + str(self.x) + ",y:" + str(self.y)
+
 
 class AStar:
     """
@@ -130,7 +133,11 @@ class AStar:
         startNode = AStar.Node(self.startPoint, self.endPoint)
         self.openList.append(startNode)
         # 2.主循环逻辑
+        count = 0
         while True:
+            count += 1
+            if count > 100:
+                return None
             # 找到F值最小的点
             minF = self.getMinNode()
             # 把这个点加入closeList中，并且在openList中删除它
@@ -157,9 +164,7 @@ class AStar:
                         pathList.append(cPoint.point)
                         cPoint = cPoint.father
                     else:
-                        # print(pathList)
-                        # print(list(reversed(pathList)))
-                        # print(pathList.reverse())
+                        print(count)
                         return list(reversed(pathList))
             if len(self.openList) == 0:
                 return None
