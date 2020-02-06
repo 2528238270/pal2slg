@@ -58,14 +58,14 @@ class Walker:
         # 自动走下一步
         self.auto_goto()
 
-    def render(self):
+    def render(self, map_x, map_y):
         """
         渲染行走者
         """
         if self.walking:
-            self.animations[self.face].draw_src(g.screen, self.render_x, self.render_y)
+            self.animations[self.face].draw_src(g.screen, map_x + self.render_x, map_y + self.render_y)
         else:
-            Sprite.draw(g.screen, self.walker_img, self.render_x, self.render_y, 0, self.face, 56, 96)
+            Sprite.draw(g.screen, self.walker_img, map_x + self.render_x, map_y + self.render_y, 0, self.face, 56, 96)
 
     def goto(self, mx, my):
         """

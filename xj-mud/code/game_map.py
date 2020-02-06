@@ -55,5 +55,26 @@ class GameMap:
                 v = int.from_bytes(chunk[8:12], 'little')
                 self.enter_point[x][y] = v
 
+    def roll(self, role_x, role_y, win_width=640, win_height=480):
+        """
+        地图滚动
+        :param role_x: 角色相对于地图的坐标
+        :param role_y:
+        """
+        # print(role_x, role_y)
+        if role_x < win_width / 2:
+            self.x = 0
+        elif role_x > self.size_w - win_width / 2:
+            self.x = -(self.size_w - win_width)
+        else:
+            self.x = -(role_x - win_width / 2)
+
+        if role_y < win_height / 2:
+            self.y = 0
+        elif role_y > self.size_h - win_height / 2:
+            self.y = -(self.size_h - win_height)
+        else:
+            self.y = -(role_y - win_height / 2)
+
     def unload(self):
         pass
