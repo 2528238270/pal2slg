@@ -3,14 +3,13 @@ import json
 
 import pygame
 
-from code import scenes
 from code.engine.animation import Animator, Fade
 from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.fighter import Fighter, FightManager
-from code.game_map import GameMap
 from code.scenes import StartScene
+from code.walker import Walker
 
 
 class Game:
@@ -72,6 +71,9 @@ class Game:
         g.fade = Fade(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
+        g.sm_walker = Walker(0, 200, 250)
+        g.sm_walker.walking = True
+        g.sm_walker.face = 4
         g.scene_id = ENUM_SCENE.START_SCENE
         # g.game_map = GameMap()
         # g.game_map.load(1)
@@ -95,9 +97,11 @@ class Game:
             g.fade.logic()
             self.event_handler()
             g.animator.update()
+            g.sm_walker.logic()
             scene.logic()
             scene.render()
             g.animator.draw()
+            g.sm_walker.render()
             g.fade.draw()
             # if g.scene_id == ENUM_SCENE.START_SCENE:
             #     scenes.logic()

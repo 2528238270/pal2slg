@@ -116,7 +116,6 @@ class GameScene(Scene):
         if not load_save:
             # 新游戏
             self.game_map.load(1)
-            pass
 
     def logic(self):
         pass

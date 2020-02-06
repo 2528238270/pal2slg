@@ -65,7 +65,7 @@ class Animation:
 
     def draw(self, surface):
         """
-        绘图
+        绘图,把x,y作为中心点绘制
         :param surface: 目标surface
         """
         dest_x = self.x - self.dw / 2
@@ -73,6 +73,21 @@ class Animation:
         cell_x = self.current_frame % self.col
         cell_y = int(self.current_frame / self.col)
         self.draw_cell(surface, self.img, dest_x, dest_y, cell_x, cell_y, self.dw, self.dh)
+
+    def draw_src(self, surface, x, y):
+        """
+        绘图，把x，y作为左上角尽心绘制
+        """
+        cell_x = self.current_frame % self.col
+        cell_y = int(self.current_frame / self.col)
+        self.draw_cell(surface, self.img, x, y, cell_x, cell_y, self.dw, self.dh)
+
+    def reset(self):
+        """
+        重置动画
+        """
+        self.current_frame = 0
+        self.current_count = 0
 
     @staticmethod
     def draw_cell(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32):
