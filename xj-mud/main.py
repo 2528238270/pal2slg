@@ -71,9 +71,10 @@ class Game:
         g.fade = Fade(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
-        g.sm_walker = Walker(0, 200, 250)
-        g.sm_walker.walking = True
-        g.sm_walker.face = 4
+        g.sm_walker = Walker(0, 15, 15)
+        g.sm_walker.walking = False
+        g.sm_walker.face = 0
+        g.sm_walker.goto(10,10)
         g.scene_id = ENUM_SCENE.START_SCENE
         # g.game_map = GameMap()
         # g.game_map.load(1)
