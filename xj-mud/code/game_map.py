@@ -54,6 +54,8 @@ class GameMap:
                 y = int.from_bytes(chunk[4:8], 'little')
                 v = int.from_bytes(chunk[8:12], 'little')
                 self.enter_point[x][y] = v
+        pygame.mixer.music.load(f'./resource/music/map{map_id}.mp3')
+        pygame.mixer.music.play(-1)
 
     def roll(self, role_x, role_y, win_width=640, win_height=480):
         """

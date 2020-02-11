@@ -69,10 +69,12 @@ class Game:
         g.scene_mgr = SceneManager()
         g.animator = Animator(self.screen)
         g.fade = Fade(self.screen)
-        # g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
-        g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
+        g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
+        # g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
         # g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
-        g.scene_id = ENUM_SCENE.GAME_SCENE
+        # g.scene_id = ENUM_SCENE.GAME_SCENE
+        g.scene_id = ENUM_SCENE.START_SCENE
+
         # g.game_map = GameMap()
         # g.game_map.load(1)
         # g.game_map.enter_point.debug_show()

@@ -127,16 +127,20 @@ class GameScene(Scene):
         Sprite.blit(g.screen, self.game_map.btm_img, self.game_map.x, self.game_map.y)
         self.sm_walker.render(self.game_map.x, self.game_map.y)
         Sprite.blit(g.screen, self.game_map.top_img, self.game_map.x, self.game_map.y)
+        # 人物重绘
+        if self.game_map.redraw_data[self.sm_walker.mx][self.sm_walker.my] == 1:
+            self.sm_walker.render(self.game_map.x, self.game_map.y)
+
         # debug
-        for x in range(self.game_map.w):
-            for y in range(self.game_map.h):
-                if self.game_map.walk_data[x][y] == 0:  # 不是障碍，画空心的矩形
-                    # pygame.draw.rect(g.screen, (255, 255, 255),
-                    #                  (self.game_map.x + x * 16, self.game_map.y + y * 16, 16, 16), 1)
-                    pass
-                else:  # 是障碍，画黑色实心的矩形
-                    pygame.draw.rect(g.screen, (255, 255, 255),
-                                     (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
+        # for x in range(self.game_map.w):
+        #     for y in range(self.game_map.h):
+        #         if self.game_map.walk_data[x][y] == 0:  # 不是障碍，画空心的矩形
+        #             # pygame.draw.rect(g.screen, (255, 255, 255),
+        #             #                  (self.game_map.x + x * 16, self.game_map.y + y * 16, 16, 16), 1)
+        #             pass
+        #         else:  # 是障碍，画黑色实心的矩形
+        #             pygame.draw.rect(g.screen, (255, 255, 255),
+        #                              (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
     def mouse_down(self, x, y):
         mx = int((x - self.game_map.x) / 16)

@@ -175,7 +175,7 @@ class Fade:
         self.sw = False  # 开关，是否启动淡入淡出
         self.callback = None  # 回调函数
         self.state = 0  # 当前状态
-        self.speed = 10
+        self.speed = 5
         self.alpha = 0
         self.dest = dest
         self.surface = Surface((640, 480))
@@ -213,5 +213,4 @@ class Fade:
 
     def reset(self):
         self.state = 0  # 当前状态
-        self.speed = 2
         self.alpha = 0

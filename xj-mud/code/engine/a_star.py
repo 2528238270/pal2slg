@@ -136,7 +136,7 @@ class AStar:
         count = 0
         while True:
             count += 1
-            if count > 100:
+            if count > 400:
                 return None
             # 找到F值最小的点
             minF = self.getMinNode()
@@ -164,7 +164,6 @@ class AStar:
                         pathList.append(cPoint.point)
                         cPoint = cPoint.father
                     else:
-                        print(count)
                         return list(reversed(pathList))
             if len(self.openList) == 0:
                 return None
