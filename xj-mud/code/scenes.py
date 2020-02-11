@@ -52,6 +52,9 @@ class StartScene(Scene):
         """
         开始界面逻辑
         """
+        if g.scene_id != self.scene_id:  # 在切换场景时，会有一帧用上一次的场景，所以一定要判断一下当前场景值是不是正确的
+            return
+
         if self.video_state == 0:
             self.count += self.video1_speed
             if int(self.count) >= len(self.video1):
@@ -70,6 +73,9 @@ class StartScene(Scene):
         """
         渲染
         """
+        if g.scene_id != self.scene_id:  # 在切换场景时，会有一帧用上一次的场景，所以一定要判断一下当前场景值是不是正确的
+            return
+
         # 播放背景视频
         pygame.surfarray.blit_array(g.screen, self.bg)
         # 绘制背景、按钮
@@ -102,6 +108,11 @@ class StartScene(Scene):
         def temp():
             g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
             g.scene_id = ENUM_SCENE.GAME_SCENE
+            # 释放视频内存
+            start_scene = g.scene_mgr.find_scene_by_id(ENUM_SCENE.START_SCENE)
+            del start_scene.video1
+            del start_scene.video2
+            print("释放内存成功")
 
         g.fade.start(temp)
 

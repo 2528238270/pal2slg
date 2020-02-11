@@ -7,6 +7,7 @@ class Global:
     screen = None  # 窗口surface
     fnt_hp = None  # 血量字体
     fnt_battle_name = None  # 战斗名字字体
+    fnt_talk = None  # 聊天字体
     bg = None  # 游戏背景
     bg_title = None  # 标题背景
     bg_battle = None  # 战斗背景
@@ -33,7 +34,8 @@ class Global:
     fight_mgr = None  # 战斗管理器
     scene_mgr = None  # 场景管理器
     animator = None  # 动画管理器
-    fade = None     # 淡入淡出功能
+    fade = None  # 淡入淡出功能
+    talk_mgr = None  # 对话管理器
     scene_id = 0  # 场景id
 
     def __new__(cls, *args, **kwargs):

@@ -5,10 +5,11 @@ import pygame
 
 from code.engine.animation import Animator, Fade
 from code.engine.scene import SceneManager
-from code.engine.sprite import Sprite
+from code.engine.sprite import Sprite, draw_rect_text
 from code.game_global import g, ENUM_SCENE
 from code.fighter import Fighter, FightManager
 from code.scenes import StartScene, GameScene
+from code.talk import TalkManager
 from code.walker import Walker
 
 
@@ -41,6 +42,7 @@ class Game:
         # 加载所需资源
         g.fnt_hp = pygame.font.Font('./resource/font/font1.TTF', 16)
         g.fnt_battle_name = pygame.font.Font('./resource/font/font1.TTF', 24)
+        g.fnt_talk = pygame.font.SysFont('microsoftyaheimicrosoftyaheiui', 16)
         g.bg = pygame.image.load('./resource/dazhuzai/login_bg_60b2432a.png').convert_alpha()
         g.bg_title = pygame.image.load('./resource/dazhuzai/hero_res_1021_c4e8972d.png').convert_alpha()
         g.bg_battle = pygame.image.load('./resource/dazhuzai/hero_res_battle_bg.png').convert_alpha()
@@ -69,12 +71,13 @@ class Game:
         g.scene_mgr = SceneManager()
         g.animator = Animator(self.screen)
         g.fade = Fade(self.screen)
+        g.talk_mgr = TalkManager(self.screen)
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         # g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
         # g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
         # g.scene_id = ENUM_SCENE.GAME_SCENE
         g.scene_id = ENUM_SCENE.START_SCENE
-
+        g.talk_mgr.start(0)
         # g.game_map = GameMap()
         # g.game_map.load(1)
         # g.game_map.enter_point.debug_show()
@@ -112,7 +115,8 @@ class Game:
             #     Sprite.blit(g.screen, g.bg, 0, 0)
             #     Sprite.blit(g.screen, g.bg_title, 0, 0)
             #     g.fight_mgr.render()
-
+            g.talk_mgr.logic()
+            g.talk_mgr.render()
             pygame.display.update()
 
     def event_handler(self):
@@ -127,8 +131,11 @@ class Game:
                 scene.mouse_down(x, y)
             elif event.type == pygame.MOUSEBUTTONUP:
                 scene.mouse_up(x, y)
+                g.talk_mgr.talk_next()
 
 
 if __name__ == '__main__':
     Game("仙剑奇侠传二", 640, 480, 60)
+    # Game("仙剑奇侠传二", 1024, 768, 60)
+
     # Game("仙剑", 1, 1)

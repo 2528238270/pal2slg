@@ -48,6 +48,15 @@ class Sprite:
         temp.set_alpha(opacity)
         target.blit(temp, (x, y))
 
+    @staticmethod
+    def draw_fill_rect(target, x, y, w, h, rgba):
+        """
+        画半透明矩形
+        """
+        surface = pygame.Surface((w, h), pygame.SRCALPHA)
+        surface.fill(rgba)
+        target.blit(surface, (x, y))
+
 
 def draw_text(dest, x, y, text, font, rgb):
     """
@@ -56,6 +65,14 @@ def draw_text(dest, x, y, text, font, rgb):
     surface = font.render(text, True, rgb)
     w = surface.get_width()
     Sprite.blit(dest, surface, x - int(w / 2), y)
+
+
+def draw_src_text(dest, x, y, text, font, rgb):
+    """
+    绘制文字
+    """
+    surface = font.render(text, True, rgb)
+    Sprite.blit(dest, surface, x, y)
 
 
 def draw_outline_text(dest, x, y, text, font, inner_rgb, outter_rgb):
@@ -70,3 +87,35 @@ def draw_outline_text(dest, x, y, text, font, inner_rgb, outter_rgb):
     Sprite.blit(dest, sur_outter, x - int(w / 2), y + 1)
     Sprite.blit(dest, sur_outter, x - int(w / 2), y - 1)
     Sprite.blit(dest, sur_inner, x - int(w / 2), y)
+
+
+def draw_src_outline_text(dest, x, y, text, font, inner_rgb, outter_rgb):
+    """
+    绘制带边框的文字
+    """
+    sur_inner = font.render(text, True, inner_rgb)
+    sur_outter = font.render(text, True, outter_rgb)
+    Sprite.blit(dest, sur_outter, x + 1, y)
+    Sprite.blit(dest, sur_outter, x - 1, y)
+    Sprite.blit(dest, sur_outter, x, y + 1)
+    Sprite.blit(dest, sur_outter, x, y - 1)
+    Sprite.blit(dest, sur_inner, x, y)
+
+
+def draw_rect_text(dest, color, text, font, x, y, width):
+    lineWidth = 0
+    lastSubStrIndex = 0
+    lineHeight = font.get_linesize()  # 行高=字体高度+行距
+    for i in range(0, len(text)):
+        lineWidth += font.size(text[i])[0]
+        if lineWidth > width or text[i] == '\n':
+            draw_src_text(dest, x, y, text[lastSubStrIndex:i], font, color)
+            y += lineHeight
+            lineWidth = 0
+            if text[i] == '\n':
+                lastSubStrIndex = i + 1
+            else:
+                lastSubStrIndex = i
+
+        if i == len(text) - 1:
+            draw_src_text(dest, x, y, text[lastSubStrIndex:i + 1], font, color)
