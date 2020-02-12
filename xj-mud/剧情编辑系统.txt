@@ -1,0 +1,27 @@
+指令：
+    show_npc:出现npc              参数：npc_id,x,y,dir(人物朝向)
+    remove_npc:移除npc            参数：npc_id
+    hide_npc:隐藏npc              参数：npc_id
+    start_talk:开始对话            参数：talk_id           备注：该指令会阻塞剧情播放器（只有执行完这个对话才会继续执行后续指令）
+    play_ani:播放动画              参数：ani_id,x,y        备注：这里的动画是需要动画编辑器提前设计好，带有回调的动画才行
+    move_camera:移动镜头           参数：x,y,cmd(镜头移动完成后执行的指令)
+    start_fight:开始战斗           参数：待定
+    move_npc:移动npc               参数：x,y,dir(人物朝向)
+    move_role:移动角色             参数：x,y,dir(人物朝向)
+    delay:延迟                     参数：second(需要延迟的描述)     备注：这个指令会延迟一段时间后，再执行下一个指令
+    fade:淡出淡入                   参数：cmd(淡出后执行的命令)
+    play_music:播放背景音乐         参数：music_id
+    play_sound:播放音效             参数：sound_id
+
+编写剧本的示例：
+show_npc 吴涛,100,100,南
+show_npc 沈七七,100,150,北
+start_talk 吴涛调戏沈七七的对话
+show_npc 赵日天,200,120,西
+move_camera 200,100,start_talk 赵日天训斥吴涛的对话
+remove_npc 赵日天
+delay 1
+hide_npc 吴涛
+hide_npc 沈七七
+play_ani 吴涛调戏沈七七的动画
+
