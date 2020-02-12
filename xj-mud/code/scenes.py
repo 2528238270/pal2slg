@@ -86,16 +86,23 @@ class StartScene(Scene):
             self.btn_exit_game.draw(g.screen)
 
     def mouse_down(self, x, y):
+        if g.talk_mgr.switch:
+            return
         self.btn_new_game.mouse_down(x, y)
         self.btn_old_game.mouse_down(x, y)
         self.btn_exit_game.mouse_down(x, y)
 
     def mouse_up(self, x, y):
+        if g.talk_mgr.switch:
+            g.talk_mgr.talk_next()
+            return
         self.btn_new_game.mouse_up()
         self.btn_old_game.mouse_up()
         self.btn_exit_game.mouse_up()
 
     def mouse_move(self, x, y):
+        if g.talk_mgr.switch:
+            return
         self.btn_new_game.get_focus(x, y)
         self.btn_old_game.get_focus(x, y)
         self.btn_exit_game.get_focus(x, y)
@@ -154,6 +161,8 @@ class GameScene(Scene):
         #                              (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
     def mouse_down(self, x, y):
+        if g.talk_mgr.switch:
+            return
         mx = int((x - self.game_map.x) / 16)
         my = int((y - self.game_map.y) / 16)
         # print(mx, my)
@@ -163,4 +172,6 @@ class GameScene(Scene):
         pass
 
     def mouse_up(self, x, y):
-        pass
+        if g.talk_mgr.switch:
+            g.talk_mgr.talk_next()
+            return

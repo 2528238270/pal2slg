@@ -1,6 +1,7 @@
 """
 对话系统
 create by 狡猾的皮球
+qq:871245007
 2020年2月11日 13:46:55
 """
 import pygame
@@ -26,7 +27,7 @@ class TalkManager:
         self.current_text = ""  # 当前对话的完整文字
         self.current_show_text = ""  # 当前显示的文字
         # 显示文字的速度，10字/秒
-        self.show_speed = 25 / g.fps
+        self.show_speed = 10 / g.fps
         self.show_count = 0
         # 头像绘制坐标
         self.face_x = 0
@@ -142,7 +143,7 @@ class TalkManager:
                               g.fnt_talk, (255, 255, 255), (255, 127, 39))
         # 画文字
         draw_rect_text(g.screen, (255, 255, 255), self.current_show_text, g.fnt_talk, self.box_x + 10, self.box_y + 30,
-                       self.box_width - 15)
+                       self.box_width - 25)
 
     def talk_next(self):
         """
