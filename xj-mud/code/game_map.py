@@ -63,7 +63,6 @@ class GameMap:
         :param role_x: 角色相对于地图的坐标
         :param role_y:
         """
-        # print(role_x, role_y)
         if role_x < win_width / 2:
             self.x = 0
         elif role_x > self.size_w - win_width / 2:
@@ -77,6 +76,26 @@ class GameMap:
             self.y = -(self.size_h - win_height)
         else:
             self.y = -(role_y - win_height / 2)
+
+    def calc_roll_pos(self, x, y, win_width=640, win_height=480):
+        """
+        计算镜头移动到目标点后地图坐标
+        """
+        if x < win_width / 2:
+            map_x = 0
+        elif x > self.size_w - win_width / 2:
+            map_x = -(self.size_w - win_width)
+        else:
+            map_x = -(x - win_width / 2)
+
+        if y < win_height / 2:
+            map_y = 0
+        elif y > self.size_h - win_height / 2:
+            map_y = -(self.size_h - win_height)
+        else:
+            map_y = -(y - win_height / 2)
+
+        return map_x, map_y
 
     def unload(self):
         pass

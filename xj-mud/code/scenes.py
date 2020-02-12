@@ -3,6 +3,7 @@ import cv2
 # 游戏开始场景
 import pygame
 
+from code.camera import CameraManager
 from code.engine.gui import Button
 from code.engine.scene import Scene
 from code.engine.sprite import Sprite
@@ -136,9 +137,11 @@ class GameScene(Scene):
             # 新游戏
             self.game_map.load(1)
             self.sm_walker = Walker(0, 25, 25)
+        self.camera_mgr = CameraManager(self.game_map, self.sm_walker)
 
     def logic(self):
-        self.game_map.roll(self.sm_walker.render_x, self.sm_walker.render_y)
+        self.camera_mgr.logic()
+        # self.game_map.roll(self.sm_walker.render_x, self.sm_walker.render_y)    # 地图滚动逻辑
         self.sm_walker.logic()
 
     def render(self):
@@ -166,6 +169,7 @@ class GameScene(Scene):
         mx = int((x - self.game_map.x) / 16)
         my = int((y - self.game_map.y) / 16)
         # print(mx, my)
+        self.camera_mgr.move((x - self.game_map.x), (y - self.game_map.y))
         self.sm_walker.find_path(self.game_map.walk_data, [mx, my])
 
     def mouse_move(self, x, y):

@@ -131,7 +131,6 @@ class Game:
                 scene.mouse_down(x, y)
             elif event.type == pygame.MOUSEBUTTONUP:
                 scene.mouse_up(x, y)
-                g.talk_mgr.talk_next()
 
 
 if __name__ == '__main__':
