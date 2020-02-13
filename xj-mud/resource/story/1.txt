@@ -1,0 +1,7 @@
+show_npc 0,30,30,3
+show_npc 2,50,30,2
+start_talk 2000
+move_npc 2,31,30,2
+start_talk 2001
+move_npc 0,25,30,3
+start_talk 2002

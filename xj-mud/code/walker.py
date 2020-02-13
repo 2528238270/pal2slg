@@ -12,7 +12,8 @@ class Walker:
     """
     config = {
         0: [56, 96, 6, 9],
-        1: [40, 68, 6, 4]
+        1: [40, 68, 6, 4],
+        2: [36, 64, 6, 4]
     }
 
     def __init__(self, walker_id, mx, my, face=0):
@@ -174,3 +175,15 @@ class Walker:
             self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
             self.path_index += 1
             # self.walking = True
+
+    def set_point(self, mx, my):
+        """
+        设置位置
+        """
+        self.mx = mx
+        self.my = my
+        self.x = mx * 16
+        self.y = my * 16
+        # 渲染坐标
+        self.render_x = int(self.x - self.cell_w / 2) + 8
+        self.render_y = self.y - self.cell_h + self.offset_y + 16

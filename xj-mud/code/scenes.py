@@ -10,6 +10,7 @@ from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
 from code.npc import NpcManager, Npc
+from code.story import StoryPlayer
 from code.walker import Walker
 
 
@@ -137,16 +138,24 @@ class GameScene(Scene):
         if not load_save:
             # 新游戏
             self.game_map.load(1)
-            self.sm_walker = Walker(0, 25, 25)
+            self.sm_walker = Walker(0, 35, 40)
         self.camera_mgr = CameraManager(self.game_map, self.sm_walker)  # 镜头管理器
         self.npc_mgr = NpcManager(g.screen)  # npc管理器
-        self.test_npc = Npc(1, 30, 30, 3, [0])
-        self.npc_mgr.add(self.test_npc)
+        g.camera_mgr = self.camera_mgr
+        g.npc_mgr = self.npc_mgr
+        g.game_map = self.game_map
+        self.story_player = StoryPlayer()  # 剧情播放器
+        self.story_player.load_script(1)
+        self.story_player.play()
+
+        # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
+        # self.npc_mgr.add(self.test_npc)
 
     def logic(self):
         self.camera_mgr.logic()
         self.npc_mgr.logic()
         self.sm_walker.logic()
+        self.story_player.logic()
 
     def render(self):
         """

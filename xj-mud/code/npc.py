@@ -91,6 +91,14 @@ class NpcManager:
 
         self.npc_list.append(npc)
 
+    def remove(self, npc_id):
+        """
+        移除npc
+        """
+        npc = self.exists(npc_id)
+        if npc:
+            self.npc_list.remove(npc)
+
     def mouse_down(self, x, y, map_x, map_y):
         """
         鼠标点击npc
@@ -100,3 +108,12 @@ class NpcManager:
                 npc.talk()
                 return True
         return False
+
+    def exists(self, npc_id):
+        """
+        通过npc_id判断这个npc是否已经存在了
+        """
+        for n in self.npc_list:
+            if n.npc_id == npc_id:
+                return n
+        return None

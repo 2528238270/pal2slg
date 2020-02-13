@@ -1,1 +1,1 @@
-from . import part_1
+from . import part_1, npc_talk
