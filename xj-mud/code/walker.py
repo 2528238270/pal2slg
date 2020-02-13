@@ -11,10 +11,11 @@ class Walker:
     行走者，8个方向的行走图
     """
     config = {
-        0: [56, 96, 6]
+        0: [56, 96, 6, 9],
+        1: [40, 68, 6, 4]
     }
 
-    def __init__(self, walker_id, mx, my):
+    def __init__(self, walker_id, mx, my, face=0):
         """
         mx:人物在地图小格子里的坐标
         my:人物在地图小格子里的坐标
@@ -27,6 +28,7 @@ class Walker:
         self.cell_w = self.config[walker_id][0]
         self.cell_h = self.config[walker_id][1]
         self.offset_y = self.config[walker_id][2]
+        self.column = self.config[walker_id][3]
         # 渲染坐标
         self.render_x = int(self.x - self.cell_w / 2) + 8
         self.render_y = self.y - self.cell_h + self.offset_y + 16
@@ -35,10 +37,10 @@ class Walker:
         self.animations = []
         for i in range(8):
             animation = Animation(self.render_x, self.render_y, self.walker_img, self.cell_w, self.cell_h, 700, True,
-                                  [9 * i, 9 * (i + 1) - 1])
+                                  [self.column * i, self.column * (i + 1) - 1])
             self.animations.append(animation)
         # 初始化面向
-        self.face = 0  # 0上 1下 2左 3右 4上左 5下右 6下左 7上右
+        self.face = face  # 0上 1下 2左 3右 4上左 5下右 6下左 7上右
         self.walking = False  # false静止状态 true行走状态
         # 角色下一步需要去的格子
         self.next_mx = 0
@@ -62,10 +64,18 @@ class Walker:
         """
         渲染行走者
         """
+        render_x = map_x + self.render_x
+        render_y = map_y + self.render_y
+        if render_x < -self.cell_w or render_x > 640 or render_y < -self.cell_h or render_y > 480:
+            """
+            人物在屏幕外，不需要渲染
+            """
+            return
+
         if self.walking:
-            self.animations[self.face].draw_src(g.screen, map_x + self.render_x, map_y + self.render_y)
+            self.animations[self.face].draw_src(g.screen, render_x, render_y)
         else:
-            Sprite.draw(g.screen, self.walker_img, map_x + self.render_x, map_y + self.render_y, 0, self.face, 56, 96)
+            Sprite.draw(g.screen, self.walker_img, render_x, render_y, 0, self.face, self.cell_w, self.cell_h)
 
     def goto(self, mx, my):
         """

@@ -9,6 +9,7 @@ from code.engine.scene import Scene
 from code.engine.sprite import Sprite
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
+from code.npc import NpcManager, Npc
 from code.walker import Walker
 
 
@@ -137,20 +138,33 @@ class GameScene(Scene):
             # 新游戏
             self.game_map.load(1)
             self.sm_walker = Walker(0, 25, 25)
-        self.camera_mgr = CameraManager(self.game_map, self.sm_walker)
+        self.camera_mgr = CameraManager(self.game_map, self.sm_walker)  # 镜头管理器
+        self.npc_mgr = NpcManager(g.screen)  # npc管理器
+        self.test_npc = Npc(1, 30, 30, 3, [0])
+        self.npc_mgr.add(self.test_npc)
 
     def logic(self):
         self.camera_mgr.logic()
-        # self.game_map.roll(self.sm_walker.render_x, self.sm_walker.render_y)    # 地图滚动逻辑
+        self.npc_mgr.logic()
         self.sm_walker.logic()
 
     def render(self):
+        """
+        渲染
+        """
+        # 创建渲染列表并排序
+        render_list = []
+        render_list.append(self.sm_walker)
+        render_list.extend(self.npc_mgr.npc_list)
+        render_list.sort(key=lambda obj: obj.y)
         Sprite.blit(g.screen, self.game_map.btm_img, self.game_map.x, self.game_map.y)
-        self.sm_walker.render(self.game_map.x, self.game_map.y)
+        for render_obj in render_list:
+            render_obj.render(self.game_map.x, self.game_map.y)
         Sprite.blit(g.screen, self.game_map.top_img, self.game_map.x, self.game_map.y)
         # 人物重绘
-        if self.game_map.redraw_data[self.sm_walker.mx][self.sm_walker.my] == 1:
-            self.sm_walker.render(self.game_map.x, self.game_map.y)
+        for render_obj in render_list:
+            if self.game_map.redraw_data[render_obj.mx][render_obj.my] == 1:
+                self.sm_walker.render(self.game_map.x, self.game_map.y)
 
         # debug
         # for x in range(self.game_map.w):
@@ -164,18 +178,20 @@ class GameScene(Scene):
         #                              (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
     def mouse_down(self, x, y):
-        if g.talk_mgr.switch:
-            return
         mx = int((x - self.game_map.x) / 16)
         my = int((y - self.game_map.y) / 16)
+        if g.talk_mgr.switch:
+            g.talk_mgr.talk_next()
+            return
         # print(mx, my)
-        self.camera_mgr.move((x - self.game_map.x), (y - self.game_map.y))
+        # self.camera_mgr.move((x - self.game_map.x), (y - self.game_map.y))
+        ret = self.npc_mgr.mouse_down(x, y, self.game_map.x, self.game_map.y)
+        if ret:
+            return
         self.sm_walker.find_path(self.game_map.walk_data, [mx, my])
 
     def mouse_move(self, x, y):
         pass
 
     def mouse_up(self, x, y):
-        if g.talk_mgr.switch:
-            g.talk_mgr.talk_next()
-            return
+        pass
