@@ -36,6 +36,7 @@ class Global:
     animator = None  # 动画管理器
     talk_mgr = None  # 对话管理器
     camera_mgr = None  # 镜头管理器
+    ani_factory = None  # 动画工厂
     npc_mgr = None  # npc管理器
     fade = None  # 淡入淡出功能
     game_map = None  # 游戏地图

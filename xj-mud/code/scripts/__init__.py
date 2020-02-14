@@ -10,5 +10,6 @@ talk_script = {
     1001: talk.npc_talk.npc1_2,
     2000: talk.part_1.story_test_script_0,
     2001: talk.part_1.story_test_script_1,
-    2002: talk.part_1.story_test_script_2
+    2002: talk.part_1.story_test_script_2,
+    2003: talk.part_1.story_test_script_3
 }

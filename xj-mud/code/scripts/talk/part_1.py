@@ -68,3 +68,14 @@ story_test_script_2 = [
         "event_args": None
     },
 ]
+
+story_test_script_3 = [
+    {
+        "name": "吴涛",
+        "text": "哇！好痛！姐姐我错了！快溜快溜！！！",
+        "face": -1,
+        "dir": "left",
+        "event": -1,
+        "event_args": None
+    }
+]

@@ -157,6 +157,31 @@ class Command:
             self.working = False
             self.done = True
 
+    def unlock_camera(self, *args):
+        """
+        解锁镜头
+        """
+        x = args[0]
+        y = args[1]
+        g.camera_mgr.unlock(x, y)
+        self.working = False
+        self.done = True
+
+    def play_ani(self, *args):
+        """
+        播放动画
+        """
+        ani_id = args[0]
+        x = args[1]
+        y = args[2]
+        self.ani = g.ani_factory.create(ani_id, x, y)
+        self.working = True
+
+    def play_ani_logic(self):
+        if self.ani.least_once:
+            self.working = False
+            self.done = True
+
 
 class StoryPlayer:
     """
@@ -171,7 +196,7 @@ class StoryPlayer:
         """
         加载剧本文件
         """
-        with open(f'./resource/story/{script_id}.txt', encoding='utf8') as file:
+        with open(f'./resource/story/{script_id}.txt', 'r', encoding='utf8') as file:
             cmd_list = file.readlines()
         for cmd in cmd_list:
             if cmd.startswith('#') or cmd.startswith('//') or cmd.startswith("'"):

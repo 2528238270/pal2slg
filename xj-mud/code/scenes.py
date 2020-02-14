@@ -3,6 +3,7 @@ import cv2
 # 游戏开始场景
 import pygame
 
+from code.animation import PalAnimationFactory
 from code.camera import CameraManager
 from code.engine.gui import Button
 from code.engine.scene import Scene
@@ -141,10 +142,12 @@ class GameScene(Scene):
             self.sm_walker = Walker(0, 35, 40)
         self.camera_mgr = CameraManager(self.game_map, self.sm_walker)  # 镜头管理器
         self.npc_mgr = NpcManager(g.screen)  # npc管理器
+        self.story_player = StoryPlayer()  # 剧情播放器
+        self.ani_factory = PalAnimationFactory(g.animator)  # 动画工厂，为剧情播放器提供动画功能
         g.camera_mgr = self.camera_mgr
         g.npc_mgr = self.npc_mgr
         g.game_map = self.game_map
-        self.story_player = StoryPlayer()  # 剧情播放器
+        g.ani_factory = self.ani_factory
         self.story_player.load_script(1)
         self.story_player.play()
 

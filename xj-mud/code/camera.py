@@ -82,9 +82,11 @@ class CameraManager:
         """
         self.lock_role = False
         self.moving = False
-        map_x, map_y = self.game_map.calc_roll_pos(x, y)
+        map_x, map_y = self.game_map.calc_roll_pos(x*16, y*16)
         self.game_map.x = map_x
         self.game_map.y = map_y
+        print(x, y)
+        print(map_x, map_y)
 
     def lock(self, walker):
         """
