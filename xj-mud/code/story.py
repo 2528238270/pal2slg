@@ -176,6 +176,8 @@ class StoryPlayer:
         for cmd in cmd_list:
             if cmd.startswith('#') or cmd.startswith('//') or cmd.startswith("'"):
                 continue
+            if cmd.replace('\n', '').replace(' ', '') == '':
+                continue
             cmd = cmd.replace('\n', '')
             cmd_name, args = cmd.split(' ')
             args = args.split(',')
