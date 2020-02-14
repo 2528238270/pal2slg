@@ -75,3 +75,29 @@ class CameraManager:
             self.moving = False
             if self.callback:
                 self.callback(*self.args)
+
+    def unlock(self, x, y):
+        """
+        解除镜头锁定并且直接移动镜头到指定位置
+        """
+        self.lock_role = False
+        self.moving = False
+        map_x, map_y = self.game_map.calc_roll_pos(x, y)
+        self.game_map.x = map_x
+        self.game_map.y = map_y
+
+    def lock(self, walker):
+        """
+        锁定视角到指定walker上，镜头直接移动到指定walker
+        """
+        self.lock_role = True  # 是否锁定镜头
+        self.walker = walker  # 锁定镜头的主角
+        self.moving = False  # 镜头是否正在移动
+
+    def move_m_pos(self, mx, my, callback=None, args=None):
+        """
+        镜头移动到目标位置（mx,my是小格子的坐标，不是像素坐标）
+        """
+        x = mx * 16
+        y = my * 16
+        self.move(x, y, callback, args)

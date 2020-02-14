@@ -47,7 +47,6 @@ class Command:
         指令结构：
         show_npc npc_id,mx,my,face,talk_id_list
         """
-        print(args)
         npc_id = args[0]
         mx = args[1]
         my = args[2]
@@ -100,9 +99,6 @@ class Command:
         """
         对话逻辑
         """
-        if not self.working:
-            return
-
         if g.talk_mgr.talk_id != self.talk_id or not g.talk_mgr.switch:
             self.working = False
             self.done = True
@@ -124,10 +120,25 @@ class Command:
         """
         移动npc逻辑
         """
-        if not self.working:
-            return
         if not self.npc.walking:
             self.npc.face = self.face
+            self.working = False
+            self.done = True
+
+    def move_camera(self, *args):
+        """
+        移动镜头
+        """
+        mx = args[0]
+        my = args[1]
+        g.camera_mgr.move_m_pos(mx, my)
+        self.working = True
+
+    def move_camera_logic(self, *args):
+        """
+        移动镜头逻辑
+        """
+        if not g.camera_mgr.moving:
             self.working = False
             self.done = True
 
@@ -145,13 +156,14 @@ class StoryPlayer:
         """
         加载剧本文件
         """
-        with open(f'./resource/story/{script_id}.txt') as file:
+        with open(f'./resource/story/{script_id}.txt', encoding='utf8') as file:
             cmd_list = file.readlines()
         for cmd in cmd_list:
+            if cmd.startswith('#') or cmd.startswith('//') or cmd.startswith("'"):
+                continue
             cmd = cmd.replace('\n', '')
             cmd_name, args = cmd.split(' ')
             args = args.split(',')
-            print(cmd_name, args)
             command = Command(cmd_name, args)
             self.cmd_list.append(command)
 

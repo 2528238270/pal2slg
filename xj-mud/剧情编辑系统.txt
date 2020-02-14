@@ -4,7 +4,7 @@
     hide_npc:隐藏npc              参数：npc_id
     start_talk:开始对话            参数：talk_id           备注：该指令会阻塞剧情播放器（只有执行完这个对话才会继续执行后续指令）
     play_ani:播放动画              参数：ani_id,x,y        备注：这里的动画是需要动画编辑器提前设计好，带有回调的动画才行
-    move_camera:移动镜头           参数：x,y,cmd(镜头移动完成后执行的指令)
+    move_camera:移动镜头           参数：x,y
     start_fight:开始战斗           参数：待定
     move_npc:移动npc              参数：npc_id,x,y,dir(人物朝向)
     move_role:移动角色             参数：npc_id,x,y,dir(人物朝向)

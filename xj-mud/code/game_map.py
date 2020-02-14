@@ -79,6 +79,7 @@ class GameMap:
 
     def calc_roll_pos(self, x, y, win_width=640, win_height=480):
         """
+        x,y:以地图左上角建立坐标系得到的坐标
         计算镜头移动到目标点后地图坐标
         """
         if x < win_width / 2:
