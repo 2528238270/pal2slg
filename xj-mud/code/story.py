@@ -142,6 +142,21 @@ class Command:
             self.working = False
             self.done = True
 
+    def delay(self, *args):
+        """
+        延迟
+        """
+        second = args[0]
+        self.total_frame = second * g.fps  # 计算second秒需要经过多少个主循环
+        self.count = 0
+        self.working = True
+
+    def delay_logic(self):
+        self.count += 1
+        if self.count >= self.total_frame:
+            self.working = False
+            self.done = True
+
 
 class StoryPlayer:
     """
