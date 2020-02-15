@@ -4,7 +4,11 @@ create by 狡猾的皮球
 qq:871245007
 2020年2月15日 13:23:01
 """
+import pygame
+
+from code.engine.gui import Button
 from code.engine.sprite import Sprite
+from code.game_global import g
 from code.game_map import GameMap
 from code.walker import Walker
 
@@ -64,6 +68,51 @@ class VictoryCondition:
         pass
 
 
+class FightMenu:
+    """
+    战斗操作指令的菜单
+    """
+
+    def __init__(self, surface, x, y):
+        self.surface = surface
+        self.switch = False
+        self.x = x
+        self.y = y
+        self.img_bg = pygame.image.load('./resource/PicLib/all_sys/fight_menu_bg.png').convert_alpha()
+        self.img_btn_move_1 = pygame.image.load('./resource/PicLib/all_sys/btn_move_1.png').convert_alpha()
+        self.img_btn_move_2 = pygame.image.load('./resource/PicLib/all_sys/btn_move_2.png').convert_alpha()
+        self.img_btn_attack_1 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_1.png').convert_alpha()
+        self.img_btn_attack_2 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_2.png').convert_alpha()
+
+        self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2)
+        self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2)
+        self.btn_list = [self.btn_move, self.btn_attack]
+
+    def logic(self):
+        if not self.switch:
+            return
+        for index, btn in enumerate(self.btn_list):
+            btn.x = int(self.x + (self.img_bg.get_width() - self.img_btn_move_1.get_width()) / 2)
+            btn.y = self.y + 15 + index * (self.img_btn_move_1.get_height() + 15)
+
+    def render(self):
+        Sprite.blit(self.surface, self.img_bg, self.x, self.y)
+        for btn in self.btn_list:
+            btn.draw(self.surface)
+
+    def mouse_down(self, x, y):
+        for btn in self.btn_list:
+            btn.mouse_down(x, y)
+
+    def mouse_up(self, x, y):
+        for btn in self.btn_list:
+            btn.mouse_up()
+
+    def mouse_move(self, x, y):
+        for btn in self.btn_list:
+            btn.get_focus(x, y)
+
+
 class FightManager:
     """
     战斗管理器
@@ -79,6 +128,8 @@ class FightManager:
         self.state = 1  # 1玩家操作状态 2电脑操作状态
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
+        self.fight_menu = FightMenu(surface, 400, 100)
+        self.fight_menu.switch = True
         # 鼠标按下时，地图上的像素坐标
         self.mu_x = 0
         self.mu_y = 0
@@ -93,6 +144,7 @@ class FightManager:
     def logic(self):
         if not self.switch:
             return
+        self.fight_menu.logic()
 
     def render(self):
         if not self.switch:
@@ -101,11 +153,18 @@ class FightManager:
         # TODO:渲染战斗者
         Sprite.blit(self.surface, self.fight_map.top_img, self.fight_map.x, self.fight_map.y)
         # TODO:重绘战斗者
+        # DEBUG
+        for x in range(int(self.fight_map.size_w / 48)):
+            for y in range(int(self.fight_map.size_h / 48)):
+                pygame.draw.rect(g.screen, (255, 255, 255),
+                                 (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
+        self.fight_menu.render()
 
     def mouse_down(self, x, y):
         self.is_down = True
         self.mu_x = x - self.fight_map.x
         self.mu_y = y - self.fight_map.y
+        self.fight_menu.mouse_down(x, y)
 
     def mouse_move(self, x, y):
         if self.is_down:
@@ -119,6 +178,8 @@ class FightManager:
                 self.fight_map.y = 0
             if self.fight_map.y < -self.fight_map.size_h + 480:
                 self.fight_map.y = -self.fight_map.size_h + 480
+        self.fight_menu.mouse_move(x, y)
 
     def mouse_up(self, x, y):
         self.is_down = False
+        self.fight_menu.mouse_up(x, y)
