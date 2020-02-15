@@ -1,0 +1,18 @@
+[
+    {
+        "name": "吴涛",
+        "text": "在家憋了这么多天，真是饥渴难耐啊！",
+        "face": -1,
+        "dir": "left",
+        "event": -1,
+        "event_args": null
+    },
+    {
+        "name": "吴涛",
+        "text": "赶紧出来透透气~",
+        "face": -1,
+        "dir": "left",
+        "event": -1,
+        "event_args": null
+    }
+]

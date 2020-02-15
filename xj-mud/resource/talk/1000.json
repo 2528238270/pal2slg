@@ -1,0 +1,18 @@
+[
+    {
+        "name": "叽里呱啦",
+        "text": "姐姐，你好漂亮呀！我叫叽里呱啦~",
+        "face": -1,
+        "dir": "left",
+        "event": -1,
+        "event_args": null
+    },
+    {
+        "name": "苏媚",
+        "text": "谢谢~你好啊，叽里呱啦，我叫西里瓦拉~",
+        "face": "33-1",
+        "dir": "left",
+        "event": -1,
+        "event_args": null
+    }
+]

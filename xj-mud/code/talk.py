@@ -4,11 +4,12 @@ create by 狡猾的皮球
 qq:871245007
 2020年2月11日 13:46:55
 """
+import json
+
 import pygame
 
 from code.engine.sprite import Sprite, draw_src_outline_text, draw_rect_text
 from code.game_global import g
-from code.scripts import talk_script
 
 
 class TalkManager:
@@ -19,6 +20,7 @@ class TalkManager:
     def __init__(self, surface):
         self.surface = surface  # 渲染对话的surface
         self.switch = False  # 对话系统开关
+        self.all_talk = dict()  # 游戏中的所有对话
         self.talk_id = -1  # 对话id
         self.talk_count = -1  # 对话进度
         self.talk_script = None  # 对话脚本
@@ -38,6 +40,19 @@ class TalkManager:
         # 对话框宽度尺寸
         self.box_width = 350
         self.box_height = 150
+        # 加载所有对话文件
+        self.load()
+
+    def load(self):
+        """
+        加载所有对话
+        """
+        with open('./resource/talk/total_talk.txt', 'r', encoding='utf8') as file:
+            talk_id_list = file.readlines()
+        talk_id_list = [line.split("'")[0].replace('\n', '') for line in talk_id_list]
+        for talk_id in talk_id_list:
+            with open(f'./resource/talk/{talk_id}.json', 'r', encoding='utf8') as file:
+                self.all_talk[int(talk_id)] = json.loads(file.read(), encoding='utf8')
 
     def reset(self):
         """
@@ -57,7 +72,7 @@ class TalkManager:
         开始一个新对话
         """
         self.talk_id = talk_id
-        self.talk_script = talk_script[talk_id]
+        self.talk_script = self.all_talk[talk_id]
         self.talk_length = len(self.talk_script)
         self.switch = True
         self.talk()
