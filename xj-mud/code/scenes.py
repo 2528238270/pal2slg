@@ -8,6 +8,7 @@ from code.camera import CameraManager
 from code.engine.gui import Button
 from code.engine.scene import Scene
 from code.engine.sprite import Sprite
+from code.fight import FightManager
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
 from code.npc import NpcManager, Npc
@@ -144,17 +145,22 @@ class GameScene(Scene):
         self.npc_mgr = NpcManager(g.screen)  # npc管理器
         self.story_player = StoryPlayer()  # 剧情播放器
         self.ani_factory = PalAnimationFactory(g.animator)  # 动画工厂，为剧情播放器提供动画功能
+        self.fight_mgr = FightManager(g.screen)  # 战斗管理器
         g.camera_mgr = self.camera_mgr
         g.npc_mgr = self.npc_mgr
         g.game_map = self.game_map
         g.ani_factory = self.ani_factory
+        g.fight_mgr = self.fight_mgr
         self.story_player.load_script(1)
         self.story_player.play()
-
+        self.fight_mgr.start("", 1)
         # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
         # self.npc_mgr.add(self.test_npc)
 
     def logic(self):
+        if self.fight_mgr.switch:
+            self.fight_mgr.logic()
+            return
         self.camera_mgr.logic()
         self.npc_mgr.logic()
         self.sm_walker.logic()
@@ -164,6 +170,9 @@ class GameScene(Scene):
         """
         渲染
         """
+        if self.fight_mgr.switch:
+            self.fight_mgr.render()
+            return
         # 创建渲染列表并排序
         render_list = []
         render_list.append(self.sm_walker)
@@ -190,11 +199,14 @@ class GameScene(Scene):
         #                              (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
     def mouse_down(self, x, y):
-        mx = int((x - self.game_map.x) / 16)
-        my = int((y - self.game_map.y) / 16)
         if g.talk_mgr.switch:
             g.talk_mgr.talk_next()
             return
+        if self.fight_mgr.switch:
+            self.fight_mgr.mouse_down(x, y)
+            return
+        mx = int((x - self.game_map.x) / 16)
+        my = int((y - self.game_map.y) / 16)
         # print(mx, my)
         # self.camera_mgr.move((x - self.game_map.x), (y - self.game_map.y))
         ret = self.npc_mgr.mouse_down(x, y, self.game_map.x, self.game_map.y)
@@ -203,7 +215,11 @@ class GameScene(Scene):
         self.sm_walker.find_path(self.game_map.walk_data, [mx, my])
 
     def mouse_move(self, x, y):
-        pass
+        if self.fight_mgr.switch:
+            self.fight_mgr.mouse_move(x, y)
+            return
 
     def mouse_up(self, x, y):
-        pass
+        if self.fight_mgr.switch:
+            self.fight_mgr.mouse_up(x, y)
+            return
