@@ -30,7 +30,7 @@ story_test_script_0 = [
     },
     {
         "name": "吴涛",
-        "text": "赶紧出来透透气",
+        "text": "赶紧出来透透气~",
         "face": -1,
         "dir": "left",
         "event": -1,
@@ -38,7 +38,6 @@ story_test_script_0 = [
     },
 ]
 
-# 剧情播放器测试对话
 story_test_script_1 = [
     {
         "name": "吴涛",
@@ -72,7 +71,7 @@ story_test_script_2 = [
 story_test_script_3 = [
     {
         "name": "吴涛",
-        "text": "哇！好痛！姐姐我错了！快溜快溜！！！",
+        "text": "啊！好痛！姐姐我错了！快溜快溜！！！",
         "face": -1,
         "dir": "left",
         "event": -1,
