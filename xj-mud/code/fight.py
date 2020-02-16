@@ -38,12 +38,16 @@ class Fighter(Walker):
         self.agi = None  # 身法
         self.luk = None  # 吉运
         self.combo = None  # 连击数
+        self.combo_count = 0  # 本回合连击数
+        self.move_times = None  # 每回合可以移动的次数
+        self.move_count = 0  # 本回合移动次数
         self.name = None  # 姓名
         self.is_enemy = False  # 是否为敌人
         self.show_walk_cell = False  # 是否显示可行走格子
         self.walk_cell = None  # 可行走格子(16*16)
 
-    def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None):
+    def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
+                 move_times=None):
         """
         设置属性
         """
@@ -55,6 +59,7 @@ class Fighter(Walker):
         self.agi = agi or self.agi  # 身法
         self.luk = luk or self.luk  # 吉运
         self.combo = combo or self.combo  # 连击数
+        self.move_times = move_times or self.move_times  # 每回合可以移动的次数
 
     def set_name(self, name):
         """
@@ -71,6 +76,8 @@ class Fighter(Walker):
             return
         if self.show_walk_cell:
             return
+        if self.move_count >= self.move_times:
+            return  # 没有可移动次数了
         # 不考虑障碍，能走多少个格子
         total_point = []
         for dx in range(-self.agi, self.agi + 1):
@@ -81,13 +88,13 @@ class Fighter(Walker):
                     continue
                 if 0 < self.mx + dx * 3 < fight_map.w and 0 < self.my + dy * 3 < fight_map.h:
                     total_point.append((self.mx + dx * 3, self.my + dy * 3))
-        # 依次寻轮，删除不可到达的格子
+        # 删除不可到达的格子
         for point in total_point[::-1]:
             if AStar(fight_map.walk_data, [self.mx, self.my], point, offset=3).start() is None:
                 total_point.remove(point)
         self.walk_cell = total_point
         self.show_walk_cell = True
-        print(self.walk_cell)
+        self.move_count += 1
 
     def draw_walk_cell(self, map_x, map_y):
         if not self.show_walk_cell:
@@ -96,17 +103,7 @@ class Fighter(Walker):
         for point in self.walk_cell:
             big_x = int((point[0] - 1) / 3)
             big_y = int((point[1] - 1) / 3)
-            pygame.draw.rect(g.screen, (0, 255, 0),
-                             (map_x + big_x * 48 + 2, map_y + big_y * 48 + 2, 48 - 4, 48 - 4), 0)
-
-
-class VictoryCondition:
-    """
-    胜利条件
-    """
-
-    def __init__(self):
-        pass
+            Sprite.blit(g.screen, g.move_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
 
 
 class FightMenu:
@@ -114,9 +111,10 @@ class FightMenu:
     战斗操作指令的菜单
     """
 
-    def __init__(self, surface, x, y):
+    def __init__(self, surface, x, y, fight_mgr=None):
         self.surface = surface
         self.switch = False
+        self.fight_mgr = fight_mgr
         self.x = x
         self.y = y
         self.img_bg = pygame.image.load('./resource/PicLib/all_sys/fight_menu_bg.png').convert_alpha()
@@ -125,7 +123,8 @@ class FightMenu:
         self.img_btn_attack_1 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_1.png').convert_alpha()
         self.img_btn_attack_2 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_2.png').convert_alpha()
 
-        self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2)
+        self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2,
+                               callBackFunc=self.move_click)
         self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2)
         self.btn_list = [self.btn_move, self.btn_attack]
 
@@ -137,6 +136,8 @@ class FightMenu:
             btn.y = self.y + 15 + index * (self.img_btn_move_1.get_height() + 15)
 
     def render(self):
+        if not self.switch:
+            return
         Sprite.blit(self.surface, self.img_bg, self.x, self.y)
         for btn in self.btn_list:
             btn.draw(self.surface)
@@ -153,6 +154,15 @@ class FightMenu:
         for btn in self.btn_list:
             btn.get_focus(x, y)
 
+    def move_click(self):
+        """
+        移动点击事件
+        """
+        if self.fight_mgr.current_fighter.show_walk_cell:
+            self.fight_mgr.current_fighter.show_walk_cell = False
+        else:
+            self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
+
 
 class FightManager:
     """
@@ -164,14 +174,17 @@ class FightManager:
         初始化战斗管理器
         """
         self.surface = surface
+        self.move_cell_img = pygame.image.load('./resource/PicLib/all_sys/move_cell.png').convert_alpha()
+        g.move_cell_img = self.move_cell_img
         self.fight_map = FightMap()  # 战斗地图
         self.fighter_list = []
         self.round = 1  # 当前回合数
         self.state = 1  # 1玩家操作状态 2电脑操作状态
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
-        self.fight_menu = FightMenu(surface, 400, 100)
-        self.fight_menu.switch = True
+        self.fight_menu = FightMenu(surface, 400, 100, self)
+        # self.fight_menu.switch = True
+        self.current_fighter = None  # 当前选中的fighter
         # 鼠标按下时，地图上的像素坐标
         self.mu_x = 0
         self.mu_y = 0
@@ -189,6 +202,8 @@ class FightManager:
             return
         self.fight_menu.logic()
         self.fighter_list.sort(key=lambda fight: fight.y)
+        for fight in self.fighter_list:
+            fight.logic()
 
     def render(self):
         if not self.switch:
@@ -245,4 +260,13 @@ class FightManager:
         for fight in self.fighter_list:
             if fight.mx == mx and fight.my == my:
                 # 显示这个人的移动范围
-                fight.open_walk_cell(self.fight_map)
+                self.fight_menu.switch = True
+                # fight.open_walk_cell(self.fight_map)
+                self.current_fighter = fight
+
+        # 移动
+        if self.current_fighter and self.current_fighter.show_walk_cell:
+            for point in self.current_fighter.walk_cell:
+                if point[0] == mx and point[1] == my:
+                    self.current_fighter.find_path(self.fight_map.walk_data, [mx, my])
+                    return
