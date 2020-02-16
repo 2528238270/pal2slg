@@ -8,7 +8,7 @@ import pygame
 
 from code.engine.a_star import AStar
 from code.engine.gui import Button
-from code.engine.sprite import Sprite
+from code.engine.sprite import Sprite, draw_src_text, draw_src_outline_text
 from code.game_global import g
 from code.game_map import GameMap
 from code.walker import Walker
@@ -164,6 +164,48 @@ class FightMenu:
             self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
 
 
+class FighterInfoPlane:
+    """
+    战斗人员信息面板
+    """
+
+    def __init__(self):
+        self.fight_info_img = pygame.image.load('./resource/PicLib/all_sys/fight_info_bg.png').convert_alpha()
+        self.switch = False
+        self.fighter = None
+
+    def show(self, fighter):
+        self.fighter = fighter
+        self.switch = True
+
+    def hide(self):
+        self.switch = False
+
+    def render(self):
+        if not self.switch:
+            return
+        Sprite.blit(g.screen, self.fight_info_img, 0, 320)
+        draw_src_text(g.screen, 10, 335, self.fighter.name, g.fnt_battle_name, (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 360, "体力  {}/{}".format(self.fighter.hp[0], self.fighter.hp[1]), g.fnt_talk,
+                              (255, 0, 0), (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 378, "真气  {}/{}".format(self.fighter.mp[0], self.fighter.mp[1]), g.fnt_talk,
+                              (0, 0, 255), (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 396, "武术  {}".format(self.fighter.atk), g.fnt_talk, (0, 255, 0), (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 414, "灵力  {}".format(self.fighter.magic), g.fnt_talk, (0, 255, 0),
+                              (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 432, "防御  {}".format(self.fighter.defense), g.fnt_talk, (0, 255, 0),
+                              (0, 0, 0))
+        draw_src_outline_text(g.screen, 10, 450, "身法  {}".format(self.fighter.agi), g.fnt_talk, (0, 255, 0),
+                              (0, 0, 0))
+        draw_src_outline_text(g.screen, 170, 360, "吉运  {}".format(self.fighter.luk), g.fnt_talk, (0, 255, 0),
+                              (0, 0, 0))
+        draw_src_outline_text(g.screen, 170, 378, "连招  {}".format(self.fighter.combo), g.fnt_talk, (0, 255, 0),
+                              (0, 0, 0))
+        draw_src_outline_text(g.screen, 170, 396,
+                              "剩余移动次数  {}".format(self.fighter.move_times - self.fighter.move_count), g.fnt_talk,
+                              (0, 255, 0), (0, 0, 0))
+
+
 class FightManager:
     """
     战斗管理器
@@ -183,6 +225,7 @@ class FightManager:
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
         self.fight_menu = FightMenu(surface, 400, 100, self)
+        self.info_plane = FighterInfoPlane()
         # self.fight_menu.switch = True
         self.current_fighter = None  # 当前选中的fighter
         # 鼠标按下时，地图上的像素坐标
@@ -225,8 +268,8 @@ class FightManager:
             for y in range(int(self.fight_map.size_h / 48)):
                 pygame.draw.rect(g.screen, (255, 255, 255),
                                  (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
-
         self.fight_menu.render()
+        self.info_plane.render()
 
     def mouse_down(self, x, y):
         self.is_down = True
@@ -247,7 +290,18 @@ class FightManager:
                 self.fight_map.y = 0
             if self.fight_map.y < -self.fight_map.size_h + 480:
                 self.fight_map.y = -self.fight_map.size_h + 480
+            return
+        # 操作菜单
         self.fight_menu.mouse_move(x, y)
+        # 信息面板
+        mx = int((x - self.fight_map.x) / 48) * 3 + 1
+        my = int((y - self.fight_map.y) / 48) * 3 + 1
+        for fighter in self.fighter_list:
+            if fighter.mx == mx and fighter.my == my:
+                self.info_plane.show(fighter)
+                break
+            else:
+                self.info_plane.hide()
 
     def mouse_up(self, x, y):
         self.is_down = False
@@ -257,13 +311,13 @@ class FightManager:
         my = int((y - self.fight_map.y) / 48) * 3 + 1
         # TODO:判断是否选中友军
         print(mx, my)
-        for fight in self.fighter_list:
-            if fight.mx == mx and fight.my == my:
+        for fighter in self.fighter_list:
+            if fighter.mx == mx and fighter.my == my:
                 # 显示这个人的移动范围
                 self.fight_menu.switch = True
                 # fight.open_walk_cell(self.fight_map)
-                self.current_fighter = fight
-
+                self.current_fighter = fighter
+                return
         # 移动
         if self.current_fighter and self.current_fighter.show_walk_cell:
             for point in self.current_fighter.walk_cell:
