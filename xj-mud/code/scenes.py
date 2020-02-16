@@ -8,7 +8,7 @@ from code.camera import CameraManager
 from code.engine.gui import Button
 from code.engine.scene import Scene
 from code.engine.sprite import Sprite
-from code.fight import FightManager
+from code.fight import FightManager, Fighter
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
 from code.npc import NpcManager, Npc
@@ -153,7 +153,9 @@ class GameScene(Scene):
         g.fight_mgr = self.fight_mgr
         self.story_player.load_script(1)
         self.story_player.play()
-        self.fight_mgr.start("", 1)
+        fighter = Fighter(0, 36, 9, 1)
+        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 2, 10, 10)
+        self.fight_mgr.start([fighter], 1)
         # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
         # self.npc_mgr.add(self.test_npc)
 

@@ -31,7 +31,7 @@ class AStar:
             self.g = g  # g值，g值在用到的时候会重新算
             self.h = (abs(endPoint.x - point.x) + abs(endPoint.y - point.y)) * 10  # 计算h值
 
-    def __init__(self, map2d, startPoint, endPoint, passTag=0):
+    def __init__(self, map2d, startPoint, endPoint, passTag=0, offset=1):
         """
         构造AStar算法的启动条件
         :param map2d: Array2D类型的寻路数组
@@ -55,6 +55,8 @@ class AStar:
 
         # 可行走标记
         self.passTag = passTag
+        # 遍历周围格子的偏移量
+        self.offset = offset
 
     def getMinNode(self):
         """
@@ -144,14 +146,14 @@ class AStar:
             self.closeList.append(minF)
             self.openList.remove(minF)
             # 判断这个节点的上下左右节点，八方寻路
-            self.searchNear(minF, 0, -1)  # 上
-            self.searchNear(minF, 0, 1)  # 下
-            self.searchNear(minF, -1, 0)  # 左
-            self.searchNear(minF, 1, 0)  # 右
-            self.searchNear(minF, -1, -1)  # 上左
-            self.searchNear(minF, 1, 1)  # 下右
-            self.searchNear(minF, -1, 1)  # 下左
-            self.searchNear(minF, 1, -1)  # 上右
+            self.searchNear(minF, 0, -self.offset)  # 上
+            self.searchNear(minF, 0, self.offset)  # 下
+            self.searchNear(minF, -self.offset, 0)  # 左
+            self.searchNear(minF, self.offset, 0)  # 右
+            self.searchNear(minF, -self.offset, -self.offset)  # 上左
+            self.searchNear(minF, self.offset, self.offset)  # 下右
+            self.searchNear(minF, -self.offset, self.offset)  # 下左
+            self.searchNear(minF, self.offset, -self.offset)  # 上右
 
             # 判断是否终止
             point = self.endPointInCloseList()
