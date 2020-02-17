@@ -90,14 +90,14 @@ class StartScene(Scene):
             self.btn_old_game.draw(g.screen)
             self.btn_exit_game.draw(g.screen)
 
-    def mouse_down(self, x, y):
+    def mouse_down(self, x, y, pressed):
         if g.talk_mgr.switch:
             return
         self.btn_new_game.mouse_down(x, y)
         self.btn_old_game.mouse_down(x, y)
         self.btn_exit_game.mouse_down(x, y)
 
-    def mouse_up(self, x, y):
+    def mouse_up(self, x, y, pressed):
         if g.talk_mgr.switch:
             g.talk_mgr.talk_next()
             return
@@ -153,10 +153,15 @@ class GameScene(Scene):
         g.fight_mgr = self.fight_mgr
         self.story_player.load_script(1)
         self.story_player.play()
-        fighter = Fighter(0, 10, 10, 1)
-        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 2, 10, 10, 3)
+        fighter = Fighter(0, 10, 10, 3)
+        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 3, 10, 10, 3)
         fighter.set_name('苏媚')
-        self.fight_mgr.start([fighter], 1)
+
+        fighter_dgt = Fighter(2, 15, 10, 2, True)
+        fighter_dgt.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt.set_name('大光头吴涛')
+
+        self.fight_mgr.start([fighter, fighter_dgt], 1)
         # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
         # self.npc_mgr.add(self.test_npc)
 
@@ -201,12 +206,12 @@ class GameScene(Scene):
         #             pygame.draw.rect(g.screen, (255, 255, 255),
         #                              (self.game_map.x + x * 16 + 1, self.game_map.y + y * 16 + 1, 14, 14), 1)
 
-    def mouse_down(self, x, y):
+    def mouse_down(self, x, y, pressed):
         if g.talk_mgr.switch:
             g.talk_mgr.talk_next()
             return
         if self.fight_mgr.switch:
-            self.fight_mgr.mouse_down(x, y)
+            self.fight_mgr.mouse_down(x, y, pressed)
             return
         mx = int((x - self.game_map.x) / 16)
         my = int((y - self.game_map.y) / 16)
@@ -222,7 +227,7 @@ class GameScene(Scene):
             self.fight_mgr.mouse_move(x, y)
             return
 
-    def mouse_up(self, x, y):
+    def mouse_up(self, x, y, pressed):
         if self.fight_mgr.switch:
-            self.fight_mgr.mouse_up(x, y)
+            self.fight_mgr.mouse_up(x, y, pressed)
             return

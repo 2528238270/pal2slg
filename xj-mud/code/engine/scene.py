@@ -23,7 +23,7 @@ class Scene:
         """
         raise NotImplementedError
 
-    def mouse_down(self, x, y):
+    def mouse_down(self, x, y, pressed):
         """
         鼠标按下
         """
@@ -35,7 +35,7 @@ class Scene:
         """
         raise NotImplementedError
 
-    def mouse_up(self, x, y):
+    def mouse_up(self, x, y, pressed):
         """
         鼠标弹起
         """

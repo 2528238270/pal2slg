@@ -27,7 +27,7 @@ class Fighter(Walker):
     战斗者
     """
 
-    def __init__(self, walker_id, mx, my, face=0):
+    def __init__(self, walker_id, mx, my, face=0, is_enemy=False):
         # 48*48转16*16
         super().__init__(walker_id, mx * 3 + 1, my * 3 + 1, face)
         self.hp = None  # 生命值
@@ -42,7 +42,7 @@ class Fighter(Walker):
         self.move_times = None  # 每回合可以移动的次数
         self.move_count = 0  # 本回合移动次数
         self.name = None  # 姓名
-        self.is_enemy = False  # 是否为敌人
+        self.is_enemy = is_enemy  # 是否为敌人
         self.show_walk_cell = False  # 是否显示可行走格子
         self.walk_cell = None  # 可行走格子(16*16)
 
@@ -185,7 +185,10 @@ class FighterInfoPlane:
         if not self.switch:
             return
         Sprite.blit(g.screen, self.fight_info_img, 0, 320)
-        draw_src_text(g.screen, 10, 335, self.fighter.name, g.fnt_battle_name, (0, 0, 0))
+        color = (0, 0, 0)
+        if self.fighter.is_enemy:
+            color = (255, 0, 0)
+        draw_src_text(g.screen, 10, 335, self.fighter.name, g.fnt_battle_name, color)
         draw_src_outline_text(g.screen, 10, 360, "体力  {}/{}".format(self.fighter.hp[0], self.fighter.hp[1]), g.fnt_talk,
                               (255, 0, 0), (0, 0, 0))
         draw_src_outline_text(g.screen, 10, 378, "真气  {}/{}".format(self.fighter.mp[0], self.fighter.mp[1]), g.fnt_talk,
@@ -224,7 +227,7 @@ class FightManager:
         self.state = 1  # 1玩家操作状态 2电脑操作状态
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
-        self.fight_menu = FightMenu(surface, 400, 100, self)
+        self.fight_menu = FightMenu(surface, 530, 100, self)
         self.info_plane = FighterInfoPlane()
         # self.fight_menu.switch = True
         self.current_fighter = None  # 当前选中的fighter
@@ -244,6 +247,7 @@ class FightManager:
         if not self.switch:
             return
         self.fight_menu.logic()
+        # 渲染排序，显示正确的层级
         self.fighter_list.sort(key=lambda fight: fight.y)
         for fight in self.fighter_list:
             fight.logic()
@@ -252,9 +256,6 @@ class FightManager:
         if not self.switch:
             return
         Sprite.blit(self.surface, self.fight_map.btm_img, self.fight_map.x, self.fight_map.y)
-        # 绘制可行走区域格子
-        for fight in self.fighter_list:
-            fight.draw_walk_cell(self.fight_map.x, self.fight_map.y)
         # 渲染战斗者
         for fight in self.fighter_list:
             fight.render(self.fight_map.x, self.fight_map.y)
@@ -268,10 +269,16 @@ class FightManager:
             for y in range(int(self.fight_map.size_h / 48)):
                 pygame.draw.rect(g.screen, (255, 255, 255),
                                  (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
+        # 绘制可行走区域格子
+        for fight in self.fighter_list:
+            fight.draw_walk_cell(self.fight_map.x, self.fight_map.y)
         self.fight_menu.render()
         self.info_plane.render()
 
-    def mouse_down(self, x, y):
+    def mouse_down(self, x, y, pressed):
+        if pressed[2] == 1:
+            self.fight_menu.switch = False
+            return
         self.is_down = True
         self.mu_x = x - self.fight_map.x
         self.mu_y = y - self.fight_map.y
@@ -303,19 +310,19 @@ class FightManager:
             else:
                 self.info_plane.hide()
 
-    def mouse_up(self, x, y):
+    def mouse_up(self, x, y, pressed):
         self.is_down = False
         self.fight_menu.mouse_up(x, y)
         # 选中格子
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
-        # TODO:判断是否选中友军
         print(mx, my)
         for fighter in self.fighter_list:
             if fighter.mx == mx and fighter.my == my:
+                if fighter.is_enemy:  # 只能选择友军
+                    return
                 # 显示这个人的移动范围
                 self.fight_menu.switch = True
-                # fight.open_walk_cell(self.fight_map)
                 self.current_fighter = fighter
                 return
         # 移动

@@ -123,14 +123,15 @@ class Game:
         x, y = pygame.mouse.get_pos()
         scene = g.scene_mgr.find_scene_by_id(g.scene_id)
         for event in pygame.event.get():
+            pressed = pygame.mouse.get_pressed()
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEMOTION:
                 scene.mouse_move(x, y)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                scene.mouse_down(x, y)
+                scene.mouse_down(x, y, pressed)
             elif event.type == pygame.MOUSEBUTTONUP:
-                scene.mouse_up(x, y)
+                scene.mouse_up(x, y, pressed)
 
 
 if __name__ == '__main__':
