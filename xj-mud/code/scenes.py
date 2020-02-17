@@ -8,7 +8,7 @@ from code.camera import CameraManager
 from code.engine.gui import Button
 from code.engine.scene import Scene
 from code.engine.sprite import Sprite
-from code.fight import FightManager, Fighter
+from code.fight import FightManager, Fighter, Magic
 from code.game_global import g, ENUM_SCENE
 from code.game_map import GameMap
 from code.npc import NpcManager, Npc
@@ -156,6 +156,7 @@ class GameScene(Scene):
         fighter = Fighter(0, 10, 10, 3)
         fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 3, 10, 10, 3)
         fighter.set_name('苏媚')
+        fighter.add_skill(Magic(1))
 
         fighter_dgt = Fighter(2, 15, 10, 2, True)
         fighter_dgt.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)

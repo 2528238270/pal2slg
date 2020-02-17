@@ -4,6 +4,8 @@ create by 狡猾的皮球
 qq:871245007
 2020年2月15日 13:23:01
 """
+import json
+
 import pygame
 
 from code.engine.a_star import AStar
@@ -45,6 +47,7 @@ class Fighter(Walker):
         self.is_enemy = is_enemy  # 是否为敌人
         self.show_walk_cell = False  # 是否显示可行走格子
         self.walk_cell = None  # 可行走格子(16*16)
+        self.skill_list = []  # 技能列表
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
                  move_times=None):
@@ -66,6 +69,12 @@ class Fighter(Walker):
         设置名字
         """
         self.name = name
+
+    def set_skill(self, skill_list):
+        self.skill_list = skill_list
+
+    def add_skill(self, magic):
+        self.skill_list.append(magic)
 
     def open_walk_cell(self, fight_map):
         """
@@ -122,11 +131,14 @@ class FightMenu:
         self.img_btn_move_2 = pygame.image.load('./resource/PicLib/all_sys/btn_move_2.png').convert_alpha()
         self.img_btn_attack_1 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_1.png').convert_alpha()
         self.img_btn_attack_2 = pygame.image.load('./resource/PicLib/all_sys/btn_attack_2.png').convert_alpha()
-
+        self.img_btn_magic_1 = pygame.image.load('./resource/PicLib/all_sys/btn_magic_1.png').convert_alpha()
+        self.img_btn_magic_2 = pygame.image.load('./resource/PicLib/all_sys/btn_magic_2.png').convert_alpha()
         self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2,
                                callBackFunc=self.move_click)
         self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2)
-        self.btn_list = [self.btn_move, self.btn_attack]
+        self.btn_magic = Button(self.x, self.y, imgNormal=self.img_btn_magic_1, imgMove=self.img_btn_magic_2)
+
+        self.btn_list = [self.btn_move, self.btn_attack, self.btn_magic]
 
     def logic(self):
         if not self.switch:
@@ -209,6 +221,18 @@ class FighterInfoPlane:
                               (0, 255, 0), (0, 0, 0))
 
 
+class Magic:
+    """
+    法术
+    """
+
+    def __init__(self, magic_id):
+        self.magic_id = magic_id  # 法术id
+        with open(f'./resource/magic/{magic_id}.json', 'r', encoding='utf8') as file:
+            self.magic_info = json.load(file)
+        print(self.magic_info)
+
+
 class FightManager:
     """
     战斗管理器
@@ -234,6 +258,7 @@ class FightManager:
         # 鼠标按下时，地图上的像素坐标
         self.mu_x = 0
         self.mu_y = 0
+        Magic(1)
 
     def start(self, fighter_list, map_id):
         """
