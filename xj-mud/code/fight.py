@@ -10,7 +10,7 @@ import pygame
 
 from code.engine.a_star import AStar
 from code.engine.gui import Button
-from code.engine.sprite import Sprite, draw_src_text, draw_src_outline_text
+from code.engine.sprite import Sprite, draw_src_text, draw_src_outline_text, draw_rect_text
 from code.game_global import g
 from code.game_map import GameMap
 from code.walker import Walker
@@ -136,7 +136,8 @@ class FightMenu:
         self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2,
                                callBackFunc=self.move_click)
         self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2)
-        self.btn_magic = Button(self.x, self.y, imgNormal=self.img_btn_magic_1, imgMove=self.img_btn_magic_2)
+        self.btn_magic = Button(self.x, self.y, imgNormal=self.img_btn_magic_1, imgMove=self.img_btn_magic_2,
+                                callBackFunc=self.magic_click)
 
         self.btn_list = [self.btn_move, self.btn_attack, self.btn_magic]
 
@@ -174,6 +175,13 @@ class FightMenu:
             self.fight_mgr.current_fighter.show_walk_cell = False
         else:
             self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
+
+    def magic_click(self):
+        if self.fight_mgr.current_fighter:
+            if not self.fight_mgr.magic_plane.switch:
+                self.fight_mgr.magic_plane.show(self.fight_mgr.current_fighter)
+            else:
+                self.fight_mgr.magic_plane.hide()
 
 
 class FighterInfoPlane:
@@ -233,6 +241,67 @@ class Magic:
         print(self.magic_info)
 
 
+class MagicPlane:
+    """
+    仙术面板
+    """
+
+    def __init__(self):
+        self.bg = pygame.image.load('./resource/PicLib/all_sys/magic_menu.png').convert_alpha()
+        self.switch = False
+        self.fighter = None
+        self.focus_index = 0  # 选中的技能
+
+    def show(self, fighter):
+        self.fighter = fighter
+        self.switch = True
+
+    def hide(self):
+        self.switch = False
+
+    def render(self):
+        if not self.switch:
+            return
+        Sprite.blit(g.screen, self.bg, 0, 0)
+        # 渲染仙术列表
+        for index, magic in enumerate(self.fighter.skill_list):
+            row = int(index / 3)  # 行
+            col = index % 3  # 列
+            magic = self.fighter.skill_list[index]
+            if not self.focus_index == index:
+                # 名称
+                draw_src_text(g.screen, 69 + col * 172, 215 + row * 26, magic.magic_info['name'], g.fnt_magic_plane,
+                              rgb=(66, 121, 8))
+                # 魔法值
+                draw_src_text(g.screen, 207 + col * 172, 215 + row * 26, str(magic.magic_info['mp']), g.fnt_magic_plane,
+                              rgb=(66, 121, 8))
+            else:
+                draw_src_outline_text(g.screen, 69 + col * 172, 215 + row * 26, magic.magic_info['name'],
+                                      g.fnt_magic_plane, (0, 170, 0), (255, 255, 255))
+                draw_src_outline_text(g.screen, 207 + col * 172, 215 + row * 26, str(magic.magic_info['mp']),
+                                      g.fnt_magic_plane, (0, 170, 0), (255, 255, 255))
+        # 仙术描述
+        if self.focus_index >= len(self.fighter.skill_list):
+            return
+        magic = self.fighter.skill_list[self.focus_index]
+        draw_rect_text(g.screen, (66, 121, 8), magic.magic_info['description'], g.fnt_magic_plane, 186, 84, 400)
+        draw_rect_text(g.screen, (66, 121, 8), magic.magic_info['tip'], g.fnt_magic_plane, 186, 163, 400)
+
+    def mouse_down(self, x, y, pressed):
+        if pressed[2] == 1:
+            self.hide()
+
+    def mouse_move(self, x, y):
+        dx = x - 69
+        dy = y - 218
+        index = int(dx / 172) + int(dy / 26) * 3
+        if index >= 0:
+            self.focus_index = index
+
+    def mouse_up(self, x, y, pressed):
+        pass
+
+
 class FightManager:
     """
     战斗管理器
@@ -253,6 +322,7 @@ class FightManager:
         self.is_down = False  # 鼠标是否按下
         self.fight_menu = FightMenu(surface, 530, 100, self)
         self.info_plane = FighterInfoPlane()
+        self.magic_plane = MagicPlane()
         # self.fight_menu.switch = True
         self.current_fighter = None  # 当前选中的fighter
         # 鼠标按下时，地图上的像素坐标
@@ -299,8 +369,13 @@ class FightManager:
             fight.draw_walk_cell(self.fight_map.x, self.fight_map.y)
         self.fight_menu.render()
         self.info_plane.render()
+        self.magic_plane.render()
 
     def mouse_down(self, x, y, pressed):
+        # 仙术面板
+        if self.magic_plane.switch:
+            self.magic_plane.mouse_down(x, y, pressed)
+            return
         if pressed[2] == 1:
             self.fight_menu.switch = False
             return
@@ -310,6 +385,10 @@ class FightManager:
         self.fight_menu.mouse_down(x, y)
 
     def mouse_move(self, x, y):
+        # 仙术面板
+        if self.magic_plane.switch:
+            self.magic_plane.mouse_move(x, y)
+            return
         # 拖动地图逻辑
         if self.is_down:
             self.fight_map.x = x - self.mu_x
@@ -336,6 +415,10 @@ class FightManager:
                 self.info_plane.hide()
 
     def mouse_up(self, x, y, pressed):
+        # 仙术面板
+        if self.magic_plane.switch:
+            self.magic_plane.mouse_up(x, y, pressed)
+            return
         self.is_down = False
         self.fight_menu.mouse_up(x, y)
         # 选中格子

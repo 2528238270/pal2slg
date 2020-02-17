@@ -156,7 +156,7 @@ class GameScene(Scene):
         fighter = Fighter(0, 10, 10, 3)
         fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 3, 10, 10, 3)
         fighter.set_name('苏媚')
-        fighter.add_skill(Magic(1))
+        fighter.set_skill([Magic(1), Magic(2), ])
 
         fighter_dgt = Fighter(2, 15, 10, 2, True)
         fighter_dgt.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)

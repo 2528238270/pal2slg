@@ -42,6 +42,9 @@ class Game:
         # 加载所需资源
         g.fnt_hp = pygame.font.Font('./resource/font/font1.TTF', 16)
         g.fnt_battle_name = pygame.font.Font('./resource/font/font1.TTF', 24)
+        g.fnt_magic_plane = pygame.font.SysFont('microsoftyaheimicrosoftyaheiui', 20)
+        g.fnt_magic_plane.set_bold(True)
+
         g.fnt_talk = pygame.font.SysFont('microsoftyaheimicrosoftyaheiui', 16)
         g.ry_fnt = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
         g.bg_enter = pygame.image.load('./resource/PicLib/all_sys/login.png').convert_alpha()
