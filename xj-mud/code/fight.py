@@ -47,7 +47,10 @@ class Fighter(Walker):
         self.is_enemy = is_enemy  # 是否为敌人
         self.show_walk_cell = False  # 是否显示可行走格子
         self.walk_cell = None  # 可行走格子(16*16)
+        self.skill_cell = []  # 施法距离(16*16)
         self.skill_list = []  # 技能列表
+        self.current_skill = None  # 选中的技能
+        self.show_skill_range = False  # 是否显示选中技能的攻击范围
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
                  move_times=None):
@@ -108,11 +111,40 @@ class Fighter(Walker):
     def draw_walk_cell(self, map_x, map_y):
         if not self.show_walk_cell:
             return
+        print("绘制行走距离")
         # 画格子
         for point in self.walk_cell:
             big_x = int((point[0] - 1) / 3)
             big_y = int((point[1] - 1) / 3)
             Sprite.blit(g.screen, g.move_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
+
+    def set_current_skill(self, skill, fight_map):
+        self.current_skill = skill
+        # 不考虑障碍，能走多少个格子
+        total_point = []
+        print(skill.magic_info['length'])
+        for dx in range(-skill.magic_info['length'], skill.magic_info['length'] + 1):
+            for dy in range(-skill.magic_info['length'], skill.magic_info['length'] + 1):
+                if dx == 0 and dy == 0:
+                    continue
+                if abs(dx) + abs(dy) > skill.magic_info['length']:
+                    continue
+                if 0 < self.mx + dx * 3 < fight_map.w and 0 < self.my + dy * 3 < fight_map.h:
+                    total_point.append((self.mx + dx * 3, self.my + dy * 3))
+        self.skill_cell = total_point
+        self.show_skill_range = True
+
+    def draw_skill_range(self, map_x, map_y):
+        """
+        渲染当前选中技能的范围
+        """
+        if not self.show_skill_range:
+            return
+        # 画格子
+        for point in self.skill_cell:
+            big_x = int((point[0] - 1) / 3)
+            big_y = int((point[1] - 1) / 3)
+            Sprite.blit(g.screen, g.magic_len_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
 
 
 class FightMenu:
@@ -171,12 +203,18 @@ class FightMenu:
         """
         移动点击事件
         """
+        # 如果正在选择仙术，那么不能使用移动功能
+        if self.fight_mgr.select_skill_target:
+            return
         if self.fight_mgr.current_fighter.show_walk_cell:
             self.fight_mgr.current_fighter.show_walk_cell = False
         else:
             self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
 
     def magic_click(self):
+        # 如果正在移动，那么不能使用仙术功能
+        if self.fight_mgr.current_fighter.show_walk_cell:
+            return
         if self.fight_mgr.current_fighter:
             if not self.fight_mgr.magic_plane.switch:
                 self.fight_mgr.magic_plane.show(self.fight_mgr.current_fighter)
@@ -246,8 +284,9 @@ class MagicPlane:
     仙术面板
     """
 
-    def __init__(self):
+    def __init__(self, fight_mgr):
         self.bg = pygame.image.load('./resource/PicLib/all_sys/magic_menu.png').convert_alpha()
+        self.fight_mgr = fight_mgr
         self.switch = False
         self.fighter = None
         self.focus_index = 0  # 选中的技能
@@ -290,6 +329,16 @@ class MagicPlane:
     def mouse_down(self, x, y, pressed):
         if pressed[2] == 1:
             self.hide()
+        dx = x - 69
+        dy = y - 218
+        index = int(dx / 172) + int(dy / 26) * 3
+        if index >= len(self.fighter.skill_list):
+            return
+        self.focus_index = index
+        self.fighter.set_current_skill(self.fighter.skill_list[index], self.fight_mgr.fight_map)
+        self.fight_mgr.select_skill_target = True  # 进入选择施法目标状态
+        self.switch = False
+        return index
 
     def mouse_move(self, x, y):
         dx = x - 69
@@ -313,22 +362,29 @@ class FightManager:
         """
         self.surface = surface
         self.move_cell_img = pygame.image.load('./resource/PicLib/all_sys/move_cell.png').convert_alpha()
+        self.magic_len_cell_img = pygame.image.load('./resource/PicLib/all_sys/magic_len_cell.png').convert_alpha()
+
         g.move_cell_img = self.move_cell_img
+        g.magic_len_cell_img = self.magic_len_cell_img
+
         self.fight_map = FightMap()  # 战斗地图
         self.fighter_list = []
         self.round = 1  # 当前回合数
         self.state = 1  # 1玩家操作状态 2电脑操作状态
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
+        self.select_skill_target = False  # 是否正在选择施法目标
         self.fight_menu = FightMenu(surface, 530, 100, self)
         self.info_plane = FighterInfoPlane()
-        self.magic_plane = MagicPlane()
+        self.magic_plane = MagicPlane(self)
         # self.fight_menu.switch = True
         self.current_fighter = None  # 当前选中的fighter
         # 鼠标按下时，地图上的像素坐标
         self.mu_x = 0
         self.mu_y = 0
-        Magic(1)
+        # 鼠标在地图上大格子的坐标
+        self.mouse_mx = 0
+        self.mouse_my = 0
 
     def start(self, fighter_list, map_id):
         """
@@ -365,8 +421,13 @@ class FightManager:
                 pygame.draw.rect(g.screen, (255, 255, 255),
                                  (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
         # 绘制可行走区域格子
-        for fight in self.fighter_list:
-            fight.draw_walk_cell(self.fight_map.x, self.fight_map.y)
+        if self.current_fighter:
+            self.current_fighter.draw_walk_cell(self.fight_map.x, self.fight_map.y)
+        if self.select_skill_target:
+            # 绘制施法距离
+            self.current_fighter.draw_skill_range(self.fight_map.x, self.fight_map.y)
+            # 绘制法术范围
+            self.draw_skill_cell()
         self.fight_menu.render()
         self.info_plane.render()
         self.magic_plane.render()
@@ -377,14 +438,34 @@ class FightManager:
             self.magic_plane.mouse_down(x, y, pressed)
             return
         if pressed[2] == 1:
-            self.fight_menu.switch = False
+            # 关闭选择目标
+            if self.select_skill_target:
+                self.select_skill_target = False
+                return
+            # 关闭战斗菜单
+            if self.fight_menu.switch:
+                self.fight_menu.switch = False
+                return
+        # 左键单击事件
+        if self.select_skill_target:
+            # TODO：施法
+            ani = g.ani_factory.create(self.current_fighter.current_skill.magic_info['ani_id'],
+                                       self.mouse_mx * 48 + self.fight_map.x - 24,
+                                       self.mouse_my * 48 + self.fight_map.y - 24)
+            self.select_skill_target = False
             return
+
         self.is_down = True
         self.mu_x = x - self.fight_map.x
         self.mu_y = y - self.fight_map.y
         self.fight_menu.mouse_down(x, y)
 
     def mouse_move(self, x, y):
+        mx = int((x - self.fight_map.x) / 48) * 3 + 1
+        my = int((y - self.fight_map.y) / 48) * 3 + 1
+        self.mouse_mx = int((x - self.fight_map.x) / 48)
+        self.mouse_my = int((y - self.fight_map.y) / 48)
+
         # 仙术面板
         if self.magic_plane.switch:
             self.magic_plane.mouse_move(x, y)
@@ -405,8 +486,6 @@ class FightManager:
         # 操作菜单
         self.fight_menu.mouse_move(x, y)
         # 信息面板
-        mx = int((x - self.fight_map.x) / 48) * 3 + 1
-        my = int((y - self.fight_map.y) / 48) * 3 + 1
         for fighter in self.fighter_list:
             if fighter.mx == mx and fighter.my == my:
                 self.info_plane.show(fighter)
@@ -439,3 +518,16 @@ class FightManager:
                 if point[0] == mx and point[1] == my:
                     self.current_fighter.find_path(self.fight_map.walk_data, [mx, my])
                     return
+
+    def draw_skill_cell(self):
+        """
+        绘制当前技能的格子
+        """
+        skill = self.current_fighter.current_skill
+        for dx in range(-skill.magic_info['range'], skill.magic_info['range'] + 1):
+            for dy in range(-skill.magic_info['range'], skill.magic_info['range'] + 1):
+                if abs(dx) + abs(dy) > skill.magic_info['range']:
+                    continue
+                if 0 < (self.mouse_mx + dx) * 3 < self.fight_map.w and 0 < (self.mouse_my + dy) * 3 < self.fight_map.h:
+                    Sprite.blit(g.screen, g.magic_len_cell_img, self.fight_map.x + (self.mouse_mx + dx) * 48 + 2,
+                                self.fight_map.y + (self.mouse_my + dy) * 48 + 2)

@@ -154,7 +154,7 @@ class GameScene(Scene):
         self.story_player.load_script(1)
         self.story_player.play()
         fighter = Fighter(0, 10, 10, 3)
-        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 3, 10, 10, 3)
+        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10, 10, 3)
         fighter.set_name('苏媚')
         fighter.set_skill([Magic(1), Magic(2), ])
 
