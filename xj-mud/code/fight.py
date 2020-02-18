@@ -5,8 +5,10 @@ qq:871245007
 2020年2月15日 13:23:01
 """
 import json
+import random
 
 import pygame
+from pygame.surface import Surface
 
 from code.engine.a_star import AStar
 from code.engine.animation import Animation
@@ -52,6 +54,7 @@ class Fighter(Walker):
         self.skill_list = []  # 技能列表
         self.current_skill = None  # 选中的技能
         self.show_skill_range = False  # 是否显示选中技能的攻击范围
+        self.skill_count = 0  # 施法次数（正常只能一次）
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
                  move_times=None):
@@ -112,7 +115,6 @@ class Fighter(Walker):
     def draw_walk_cell(self, map_x, map_y):
         if not self.show_walk_cell:
             return
-        print("绘制行走距离")
         # 画格子
         for point in self.walk_cell:
             big_x = int((point[0] - 1) / 3)
@@ -121,9 +123,7 @@ class Fighter(Walker):
 
     def set_current_skill(self, skill, fight_map):
         self.current_skill = skill
-        # 不考虑障碍，能走多少个格子
         total_point = []
-        print(skill.magic_info['length'])
         for dx in range(-skill.magic_info['length'], skill.magic_info['length'] + 1):
             for dy in range(-skill.magic_info['length'], skill.magic_info['length'] + 1):
                 if dx == 0 and dy == 0:
@@ -146,6 +146,69 @@ class Fighter(Walker):
             big_x = int((point[0] - 1) / 3)
             big_y = int((point[1] - 1) / 3)
             Sprite.blit(g.screen, g.magic_len_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
+
+    def do_skill(self, fight_mgr):
+        """
+        施法
+
+        """
+        if self.skill_count > 0:
+            return
+        # 小格子
+        mx = fight_mgr.mouse_mx * 3 + 1
+        my = fight_mgr.mouse_my * 3 + 1
+        # 判断施法坐标是不是超出范围
+        if abs(int((self.mx - 1) / 3) - fight_mgr.mouse_mx) + abs(int((self.my - 1) / 3) - fight_mgr.mouse_my) > \
+                self.current_skill.magic_info['length']:
+            return
+        # 施法的动画处理
+        ani = g.ani_factory.create(self.current_skill.magic_info['ani_id'],
+                                   fight_mgr.mouse_mx * 48 + fight_mgr.fight_map.x - 24,
+                                   fight_mgr.mouse_my * 48 + fight_mgr.fight_map.y - 24, FightAnimation,
+                                   extra={"mx": mx, "my": my, "fight_map": fight_mgr.fight_map})
+        fight_mgr.select_skill_target = False
+        # 找到技能内所有目标
+        cell_list = fight_mgr.calc_range(self.current_skill.magic_info['range'], fight_mgr.mouse_mx,
+                                         fight_mgr.mouse_my, fight_mgr.fight_map)
+        fighters = fight_mgr.get_range_fighters(cell_list, fight_mgr)
+        self.skill_effect(self.current_skill, fighters, ani)
+        # TODO:记得打开这里
+        # self.skill_count += 1
+
+    def skill_effect(self, skill, fighters, ani):
+        """
+        技能影响
+        """
+        for fighter in fighters:
+            if skill.magic_info['type'] == '群体攻击':
+                if not fighter.is_enemy:
+                    continue
+                if skill.magic_info['damage_type'] == '魔法伤害':
+                    damage = self.skill_damage(skill, fighter)
+                    fighter.hp[0] -= damage
+                    self.mp[0] -= skill.magic_info['mp']
+
+                    def t(frame):
+                        # 添加伤害动画
+                        g.fight_mgr.damage_list.append(
+                            DamageAnimation('attack', damage, 0, 0, g.fight_mgr.fight_map, fighter.mx, fighter.my)
+                        )
+
+                    ani.done_callback = t
+
+    def skill_damage(self, skill, target):
+        """
+        计算魔法伤害：
+            进攻方灵力*技能加成-被攻方防御，10%的伤害波动
+        target:被攻方
+        """
+        damage = self.magic * skill.magic_info['damage']
+        damage += random.randint(-damage / 10, damage / 10)
+        if damage <= target.defense:
+            damage = random.randint(1, 10)  # 伤害小于对方防御力时，伤害为1~10
+        else:
+            damage = damage - target.defense
+        return int(damage)
 
 
 class FightMenu:
@@ -277,7 +340,6 @@ class Magic:
         self.magic_id = magic_id  # 法术id
         with open(f'./resource/magic/{magic_id}.json', 'r', encoding='utf8') as file:
             self.magic_info = json.load(file)
-        print(self.magic_info)
 
 
 class MagicPlane:
@@ -372,6 +434,135 @@ class FightAnimation(Animation):
                       self.fight_map.y + self.my * 16 - self.dh / 2)
 
 
+class DamageAnimation:
+    """
+    伤害动画
+    """
+
+    def __init__(self, ani_type, number, x, y, fight_map=None, mx=None, my=None):
+        """
+        构造伤害动画
+        ani_type: 伤害类型：attack普通攻击 cri暴击 heal加血 poison中毒
+        """
+        width = 0
+
+        self.surface = None
+        self.fight_map = fight_map
+        # 小格子
+        self.mx = mx
+        self.my = my
+
+        if ani_type == 'attack':
+            width += g.ry_fnt_data['frames']['-']['w']
+            height = g.ry_fnt_data['frames']['-']['h']
+            number = str(number)
+            for n in number:
+                width += g.ry_fnt_data['frames'][n]['w']
+                if g.ry_fnt_data['frames'][n]['h'] > height:
+                    height = g.ry_fnt_data['frames'][n]['h']
+            self.surface = Surface((width, height), flags=pygame.SRCALPHA)
+            offset_x = 0
+            Sprite.draw_rect(
+                self.surface,
+                g.ry_fnt,
+                offset_x, int(height / 2 - g.ry_fnt_data['frames']['-']['h'] / 2),
+                g.ry_fnt_data['frames']['-']['x'],
+                g.ry_fnt_data['frames']['-']['y'],
+                g.ry_fnt_data['frames']['-']['w'],
+                g.ry_fnt_data['frames']['-']['h']
+            )
+            offset_x += g.ry_fnt_data['frames']['-']['w']
+            for n in number:
+                Sprite.draw_rect(
+                    self.surface,
+                    g.ry_fnt,
+                    offset_x, 0,
+                    g.ry_fnt_data['frames'][n]['x'],
+                    g.ry_fnt_data['frames'][n]['y'],
+                    g.ry_fnt_data['frames'][n]['w'],
+                    g.ry_fnt_data['frames'][n]['h']
+                )
+                offset_x += g.ry_fnt_data['frames'][n]['w']
+        elif ani_type == 'cri':
+            width += g.ry_fnt_data['frames']['#']['w']
+            width += g.ry_fnt_data['frames']['-']['w']
+            height = g.ry_fnt_data['frames']['#']['h']
+            number = str(number)
+            for n in number:
+                width += g.ry_fnt_data['frames'][n]['w']
+                if g.ry_fnt_data['frames'][n]['h'] > height:
+                    height = g.ry_fnt_data['frames'][n]['h']
+            self.surface = Surface((width, height), flags=pygame.SRCALPHA)
+            offset_x = 0
+            Sprite.draw_rect(
+                self.surface,
+                g.ry_fnt,
+                offset_x, int(height / 2 - g.ry_fnt_data['frames']['#']['h'] / 2),
+                g.ry_fnt_data['frames']['#']['x'],
+                g.ry_fnt_data['frames']['#']['y'],
+                g.ry_fnt_data['frames']['#']['w'],
+                g.ry_fnt_data['frames']['#']['h']
+            )
+            offset_x = g.ry_fnt_data['frames']['#']['w']
+
+            Sprite.draw_rect(
+                self.surface,
+                g.ry_fnt,
+                offset_x, int(height / 2 - g.ry_fnt_data['frames']['-']['h'] / 2),
+                g.ry_fnt_data['frames']['-']['x'],
+                g.ry_fnt_data['frames']['-']['y'],
+                g.ry_fnt_data['frames']['-']['w'],
+                g.ry_fnt_data['frames']['-']['h']
+            )
+            offset_x += g.ry_fnt_data['frames']['-']['w']
+            for n in number:
+                Sprite.draw_rect(
+                    self.surface,
+                    g.ry_fnt,
+                    offset_x, int(height / 2 - g.ry_fnt_data['frames'][n]['h'] / 2),
+                    g.ry_fnt_data['frames'][n]['x'],
+                    g.ry_fnt_data['frames'][n]['y'],
+                    g.ry_fnt_data['frames'][n]['w'],
+                    g.ry_fnt_data['frames'][n]['h']
+                )
+                offset_x += g.ry_fnt_data['frames'][n]['w']
+        self.x = int(x - width / 2)
+        self.y = y
+
+        self.done = False
+        self.move_length = 50
+        self.current_length = 0  # 当前移动长度
+        self.time = 0.5  # 伤害显示出来之后暂停多久
+        self.count = int(g.fps * self.time)  # 1秒需要经过多少帧
+        self.counter = 0  # 计数过了多少帧
+        self.alpha = 255  # 不透明度
+
+    def render(self):
+        """
+        绘制
+        """
+        if self.done:
+            return
+        if not self.fight_map:
+            Sprite.blit_alpha(g.screen, self.surface, self.x, self.y, self.alpha)
+        else:
+            Sprite.blit_alpha(g.screen, self.surface, self.fight_map.x + self.mx * 16,
+                              self.y + self.fight_map.y + self.my * 16, self.alpha)
+
+    def logic(self):
+        if self.done:
+            return
+        self.counter += 1
+        if self.counter < self.count:
+            return
+
+        self.y -= 1
+        self.current_length += 1
+        self.alpha -= 5
+        if self.current_length >= self.move_length:
+            self.done = True
+
+
 class FightManager:
     """
     战斗管理器
@@ -406,6 +597,8 @@ class FightManager:
         # 鼠标在地图上大格子的坐标
         self.mouse_mx = 0
         self.mouse_my = 0
+        # 伤害动画列表
+        self.damage_list = []
 
     def start(self, fighter_list, map_id):
         """
@@ -418,11 +611,20 @@ class FightManager:
     def logic(self):
         if not self.switch:
             return
+        self.damage_logic()
         self.fight_menu.logic()
         # 渲染排序，显示正确的层级
         self.fighter_list.sort(key=lambda fight: fight.y)
         for fight in self.fighter_list:
             fight.logic()
+
+    def damage_logic(self):
+        """伤害动画逻辑"""
+        for damage in self.damage_list[::-1]:
+            if damage.done:
+                self.damage_list.remove(damage)
+                continue
+            damage.logic()
 
     def render(self):
         if not self.switch:
@@ -449,6 +651,9 @@ class FightManager:
             self.current_fighter.draw_skill_range(self.fight_map.x, self.fight_map.y)
             # 绘制法术范围
             self.draw_skill_cell()
+        # 画伤害
+        for damage in self.damage_list:
+            damage.render()
         self.fight_menu.render()
         self.info_plane.render()
         self.magic_plane.render()
@@ -470,14 +675,7 @@ class FightManager:
         # 左键单击事件
         if self.select_skill_target:
             # TODO：施法
-            mx = self.mouse_mx * 3 + 1
-            my = self.mouse_my * 3 + 1
-
-            ani = g.ani_factory.create(self.current_fighter.current_skill.magic_info['ani_id'],
-                                       self.mouse_mx * 48 + self.fight_map.x - 24,
-                                       self.mouse_my * 48 + self.fight_map.y - 24, FightAnimation,
-                                       extra={"mx": mx, "my": my, "fight_map": self.fight_map})
-            self.select_skill_target = False
+            self.current_fighter.do_skill(self)
             return
 
         self.is_down = True
@@ -556,3 +754,49 @@ class FightManager:
                 if 0 < (self.mouse_mx + dx) * 3 < self.fight_map.w and 0 < (self.mouse_my + dy) * 3 < self.fight_map.h:
                     Sprite.blit(g.screen, g.magic_len_cell_img, self.fight_map.x + (self.mouse_mx + dx) * 48 + 2,
                                 self.fight_map.y + (self.mouse_my + dy) * 48 + 2)
+
+    @staticmethod
+    def calc_range(length, big_x, big_y, fight_map):
+        """
+        计算格子覆盖范围(返回的是小格子)
+        """
+        cell_list = []
+        for dx in range(-length, length + 1):
+            for dy in range(-length, length + 1):
+                if abs(dx) + abs(dy) > length:
+                    continue
+                if 0 <= big_x + dx < int(fight_map.w / 3) and 0 <= big_y + dy < int(fight_map.h / 3):
+                    cell_list.append([(big_x + dx) * 3 + 1, (big_y + dy) * 3 + 1])
+        return cell_list
+
+    @staticmethod
+    def get_range_fighters(cell_list, fight_mgr):
+        """
+        获取格子覆盖范围内的fighter
+        """
+        fighters = []
+        for point in cell_list:
+            for fighter in fight_mgr.fighter_list:
+                if fighter.mx == point[0] and fighter.my == point[1]:
+                    fighters.append(fighter)
+        return fighters
+
+    @staticmethod
+    def get_range_enemies(cell_list, fight_mgr):
+        """
+        获取范围内的敌人
+        """
+        fighters = FightManager.get_range_fighters(cell_list, fight_mgr)
+        for fighter in fighters[::-1]:
+            if not fighter.is_enemy:
+                fighters.remove(fighter)
+
+    @staticmethod
+    def get_range_teammates(cell_list, fight_mgr):
+        """
+        获取范围内的友军
+        """
+        fighters = FightManager.get_range_fighters(cell_list, fight_mgr)
+        for fighter in fighters[::-1]:
+            if fighter.is_enemy:
+                fighters.remove(fighter)

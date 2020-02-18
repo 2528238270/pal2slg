@@ -600,7 +600,6 @@ class DamageAnimation:
         """
         if self.done:
             return
-        # Sprite.blit(g.screen, self.surface, self.x, self.y)
         Sprite.blit_alpha(g.screen, self.surface, self.x, self.y, self.alpha)
 
     def logic(self):
