@@ -179,6 +179,7 @@ class Fighter(Walker):
         """
         技能影响
         """
+        callback_extra = []
         for fighter in fighters:
             if skill.magic_info['type'] == '群体攻击':
                 if not fighter.is_enemy:
@@ -187,14 +188,19 @@ class Fighter(Walker):
                     damage = self.skill_damage(skill, fighter)
                     fighter.hp[0] -= damage
                     self.mp[0] -= skill.magic_info['mp']
+                    callback_extra.append({
+                        'fighter': fighter,
+                        'damage': damage
+                    })
 
-                    def t(frame):
-                        # 添加伤害动画
-                        g.fight_mgr.damage_list.append(
-                            DamageAnimation('attack', damage, 0, 0, g.fight_mgr.fight_map, fighter.mx, fighter.my)
-                        )
+        def t_cb(frame):
+            for e in callback_extra:
+                g.fight_mgr.damage_list.append(
+                    DamageAnimation('attack', e['damage'], 0, 0, g.fight_mgr.fight_map, e['fighter'].mx,
+                                    e['fighter'].my)
+                )
 
-                    ani.done_callback = t
+        ani.done_callback = t_cb
 
     def skill_damage(self, skill, target):
         """
@@ -392,6 +398,7 @@ class MagicPlane:
     def mouse_down(self, x, y, pressed):
         if pressed[2] == 1:
             self.hide()
+            return
         dx = x - 69
         dy = y - 218
         index = int(dx / 172) + int(dy / 26) * 3
@@ -546,7 +553,8 @@ class DamageAnimation:
         if not self.fight_map:
             Sprite.blit_alpha(g.screen, self.surface, self.x, self.y, self.alpha)
         else:
-            Sprite.blit_alpha(g.screen, self.surface, self.fight_map.x + self.mx * 16,
+            Sprite.blit_alpha(g.screen, self.surface,
+                              self.fight_map.x + self.mx * 16 - int(self.surface.get_width() / 2),
                               self.y + self.fight_map.y + self.my * 16, self.alpha)
 
     def logic(self):

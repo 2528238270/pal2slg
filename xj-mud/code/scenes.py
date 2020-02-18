@@ -160,9 +160,34 @@ class GameScene(Scene):
 
         fighter_dgt = Fighter(2, 15, 10, 2, True)
         fighter_dgt.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        fighter_dgt.set_name('大光头吴涛')
+        fighter_dgt.set_name('大光头吴涛1')
 
-        self.fight_mgr.start([fighter, fighter_dgt], 1)
+        fighter_dgt3 = Fighter(2, 16, 10, 2, True)
+        fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt3.set_name('大光头吴涛3')
+
+        fighter_dgt2 = Fighter(2, 17, 10, 2, True)
+        fighter_dgt2.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt2.set_name('大光头吴涛2')
+
+        fighter_dgt4 = Fighter(2, 15, 11, 2, True)
+        fighter_dgt4.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt4.set_name('大光头吴涛4')
+
+        fighter_dgt5 = Fighter(2, 16, 11, 2, True)
+        fighter_dgt5.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt5.set_name('大光头吴涛5')
+
+        fighter_dgt6 = Fighter(2, 17, 11, 2, True)
+        fighter_dgt6.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt6.set_name('大光头吴涛6')
+
+        hg1 = Fighter(1, 15, 8, 2, True)
+        hg1.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        hg1.set_name('黑鬼')
+
+        self.fight_mgr.start(
+            [fighter, fighter_dgt, fighter_dgt2, fighter_dgt3, fighter_dgt4, fighter_dgt5, fighter_dgt6,hg1], 1)
         # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
         # self.npc_mgr.add(self.test_npc)
 
