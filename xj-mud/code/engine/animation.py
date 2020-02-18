@@ -6,7 +6,8 @@ class Animation:
     动画类
     """
 
-    def __init__(self, x, y, img, dw, dh, time, loop, frame_range, frame_callback=None, done_callback=None, fps=60):
+    def __init__(self, x, y, img, dw, dh, time, loop, frame_range, frame_callback=None, done_callback=None, fps=60,
+                 **kwargs):
         """
         :param x:绘制动画的中心点（不是左上角啦）
         :param y:绘制动画的中心点（不是左上角啦）
@@ -76,7 +77,7 @@ class Animation:
 
     def draw_src(self, surface, x, y):
         """
-        绘图，把x，y作为左上角尽心绘制
+        绘图，把x，y作为左上角绘制
         """
         cell_x = self.current_frame % self.col
         cell_y = int(self.current_frame / self.col)

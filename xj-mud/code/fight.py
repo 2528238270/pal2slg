@@ -9,6 +9,7 @@ import json
 import pygame
 
 from code.engine.a_star import AStar
+from code.engine.animation import Animation
 from code.engine.gui import Button
 from code.engine.sprite import Sprite, draw_src_text, draw_src_outline_text, draw_rect_text
 from code.game_global import g
@@ -351,6 +352,26 @@ class MagicPlane:
         pass
 
 
+class FightAnimation(Animation):
+    """
+    为了解决战斗场景的动画使用窗口坐标系的问题，专门写的这个类
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 魔法在地图中的小格子坐标
+        self.mx = kwargs['mx']
+        self.my = kwargs['my']
+        self.fight_map = kwargs['fight_map']
+
+    def draw(self, surface):
+        """
+        绘制相对于地图坐标系的动画，按中心点绘制
+        """
+        self.draw_src(surface, self.fight_map.x + self.mx * 16 - self.dw / 2,
+                      self.fight_map.y + self.my * 16 - self.dh / 2)
+
+
 class FightManager:
     """
     战斗管理器
@@ -416,10 +437,10 @@ class FightManager:
             if self.fight_map.redraw_data[fight.mx][fight.my] == 1:
                 fight.render(self.fight_map.x, self.fight_map.y)
         # DEBUG
-        for x in range(int(self.fight_map.size_w / 48)):
-            for y in range(int(self.fight_map.size_h / 48)):
-                pygame.draw.rect(g.screen, (255, 255, 255),
-                                 (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
+        # for x in range(int(self.fight_map.size_w / 48)):
+        #     for y in range(int(self.fight_map.size_h / 48)):
+        #         pygame.draw.rect(g.screen, (255, 255, 255),
+        #                          (self.fight_map.x + x * 48 + 2, self.fight_map.y + y * 48 + 2, 48 - 4, 48 - 4), 1)
         # 绘制可行走区域格子
         if self.current_fighter:
             self.current_fighter.draw_walk_cell(self.fight_map.x, self.fight_map.y)
@@ -449,9 +470,13 @@ class FightManager:
         # 左键单击事件
         if self.select_skill_target:
             # TODO：施法
+            mx = self.mouse_mx * 3 + 1
+            my = self.mouse_my * 3 + 1
+
             ani = g.ani_factory.create(self.current_fighter.current_skill.magic_info['ani_id'],
                                        self.mouse_mx * 48 + self.fight_map.x - 24,
-                                       self.mouse_my * 48 + self.fight_map.y - 24)
+                                       self.mouse_my * 48 + self.fight_map.y - 24, FightAnimation,
+                                       extra={"mx": mx, "my": my, "fight_map": self.fight_map})
             self.select_skill_target = False
             return
 
