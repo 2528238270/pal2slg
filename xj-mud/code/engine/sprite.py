@@ -38,15 +38,38 @@ class Sprite:
         dest.blit(source, (x, y), (0, 0, int(source.get_width() * percent), source.get_height()))
 
     @staticmethod
-    def blit_alpha(target, source, x, y, opacity):
+    def blit_alpha(target, source, x, y, opacity, rect=None):
         """
         绘制半透明图片（解决带alpha通道的surface的set_alpha不起作用的问题）
         """
         temp = pygame.Surface((source.get_width(), source.get_height())).convert()
-        temp.blit(target, (-x, -y))
-        temp.blit(source, (0, 0))
-        temp.set_alpha(opacity)
-        target.blit(temp, (x, y))
+        if rect:
+            rect[0] = -rect[0]
+            rect[1] = -rect[1]
+            temp.blit(target, (-x, -y), rect)
+            temp.blit(source, (0, 0), rect)
+            temp.set_alpha(opacity)
+            target.blit(temp, (x, y), rect)
+        else:
+            temp.blit(target, (-x, -y))
+            temp.blit(source, (0, 0))
+            temp.set_alpha(opacity)
+            target.blit(temp, (x, y))
+
+    @staticmethod
+    def draw_alpha(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32, opacity=0):
+        """
+        有bug，不可用
+        """
+        print((cell_x * cell_w, cell_y * cell_h, cell_w, cell_h))
+        Sprite.blit_alpha(dest, source, x, y, opacity, [cell_x * cell_w, cell_y * cell_h, cell_w, cell_h])
+
+    @staticmethod
+    def subsurface(source, cell_x, cell_y, cell_w=32, cell_h=32):
+        """
+        返回子表面
+        """
+        return source.subsurface([cell_x * cell_w, cell_y * cell_h, cell_w, cell_h])
 
     @staticmethod
     def draw_fill_rect(target, x, y, w, h, rgba):

@@ -1,5 +1,25 @@
 """
-战斗系统，整个项目中最复杂的系统
+战棋战斗系统：
+1.判断胜利的条件：敌人全灭获胜，我方全灭失败
+2.战斗操作：
+    ①玩家可以拖动地图
+    ②玩家有移动、攻击、法术、道具、回合结束四个操作
+3.攻击：
+    ①人物的连击属性就是玩家每回合可以使用攻击指令的次数
+    ②攻击是物理单体攻击，会进入战斗动画
+4.法术：
+    法术分为攻击型法术、恢复型法术和封印型法术
+        ①攻击型法术：攻击型法术分为范围攻击和单体攻击，范围攻击不会进入战斗动画，单体攻击会进入战斗动画
+        ②恢复型法术：给队友加血，不会进入战斗动画
+        ③封印型法术：封印敌人，不会进入战斗动画
+5.道具：
+    道具一律都是作用单体的，并且都不会进入战斗动画
+        ①回血道具
+        ②回蓝道具
+        ③回蓝回血道具
+6.回合结束：
+    不论是否还有队友没有行动，都回合结束（会有二次确认），进入敌人操作阶段
+
 create by 狡猾的皮球
 qq:871245007
 2020年2月15日 13:23:01
@@ -56,6 +76,12 @@ class Fighter(Walker):
         self.current_skill = None  # 选中的技能
         self.show_skill_range = False  # 是否显示选中技能的攻击范围
         self.skill_count = 0  # 施法次数（正常只能一次）
+        self.dead = False  # 是否为死者（死了会触发死亡动画）
+        self.alpha = 255  # 死亡动画的不透明度
+        self.dead_dy = 0  # 死亡y轴偏移量（死了人物会往上飘）
+        self.max_dead_dy = 80  # 最大死亡偏移量
+        self.current_surface = None  # idle状态下的图片
+        self.visible = True  # 是否可见
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
                  move_times=None):
@@ -151,7 +177,6 @@ class Fighter(Walker):
     def do_skill(self, fight_mgr):
         """
         施法
-
         """
         if self.skill_count > 0:
             return
@@ -188,6 +213,8 @@ class Fighter(Walker):
                 if skill.magic_info['damage_type'] == '魔法伤害':
                     damage = self.skill_damage(skill, fighter)
                     fighter.hp[0] -= damage
+                    if fighter.hp[0] <= 0:
+                        fighter.hp[0] = 0
                     self.mp[0] -= skill.magic_info['mp']
                     callback_extra.append({
                         'fighter': fighter,
@@ -200,6 +227,9 @@ class Fighter(Walker):
                     DamageAnimation('attack', e['damage'], 0, 0, g.fight_mgr.fight_map, e['fighter'].mx,
                                     e['fighter'].my)
                 )
+                # 死亡处理
+                if e['fighter'].hp[0] <= 0:
+                    e['fighter'].set_dead()
 
         ani.done_callback = t_cb
 
@@ -255,6 +285,45 @@ class Fighter(Walker):
             if point[0] == mx and point[1] == my:
                 self.find_path(walk_data, [mx, my])
                 return
+
+    def logic(self):
+        """
+        这个逻辑主要是用来处理死亡动画的
+        """
+        super().logic()
+        if self.dead:
+            self.dead_dy += 4
+            self.alpha -= 8
+            if self.dead_dy >= self.max_dead_dy:
+                self.dead_dy = self.max_dead_dy
+            if self.alpha <= 0:
+                self.alpha = 0
+        if self.alpha == 0:
+            self.visible = False
+            # 直接删除敌人
+            g.fight_mgr.fighter_list.remove(self)
+
+    def render(self, map_x, map_y):
+        """
+        死亡动画的渲染扩展
+        """
+        if not self.visible:
+            return
+        if not self.dead:
+            super().render(map_x, map_y)
+        else:
+            render_x = map_x + self.render_x
+            render_y = map_y + self.render_y - self.dead_dy
+            if render_x < -self.cell_w or render_x > 640 or render_y < -self.cell_h or render_y > 480:
+                """
+                人物在屏幕外，不需要渲染
+                """
+                return
+            Sprite.blit_alpha(g.screen, self.current_surface, render_x, render_y, self.alpha)
+
+    def set_dead(self):
+        self.dead = True
+        self.current_surface = Sprite.subsurface(self.walker_img, 0, self.face, self.cell_w, self.cell_h)
 
 
 class FightMenu:
@@ -855,3 +924,17 @@ class FightManager:
         for fighter in fighters[::-1]:
             if fighter.is_enemy:
                 fighters.remove(fighter)
+
+    @staticmethod
+    def big2small(big_x, big_y):
+        """
+        大格子转小格子
+        """
+        return big_x * 3 + 1, big_y * 3 + 1
+
+    @staticmethod
+    def small2big(mx, my):
+        """
+        小格子转大格子
+        """
+        return int((mx - 1) / 3), int((my - 1) / 3)
