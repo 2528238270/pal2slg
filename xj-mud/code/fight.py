@@ -72,9 +72,11 @@ class Fighter(Walker):
         self.show_walk_cell = False  # 是否显示可行走格子
         self.walk_cell = None  # 可行走格子(16*16)
         self.skill_cell = []  # 施法距离(16*16)
+        self.attack_cell = []  # 攻击格子
         self.skill_list = []  # 技能列表
         self.current_skill = None  # 选中的技能
         self.show_skill_range = False  # 是否显示选中技能的攻击范围
+        self.show_attack_range = False  # 是否显示攻击范围
         self.skill_count = 0  # 施法次数（正常只能一次）
         self.dead = False  # 是否为死者（死了会触发死亡动画）
         self.alpha = 255  # 死亡动画的不透明度
@@ -325,6 +327,48 @@ class Fighter(Walker):
         self.dead = True
         self.current_surface = Sprite.subsurface(self.walker_img, 0, self.face, self.cell_w, self.cell_h)
 
+    def open_attack_cell(self, fight_map):
+        """
+        打开攻击格子，就1格
+        """
+        if self.walking:
+            return
+        if self.show_walk_cell:
+            return
+        total_point = []
+        for dx in range(-1, 1 + 1):
+            for dy in range(-1, 1 + 1):
+                if dx == 0 and dy == 0:
+                    continue
+                if abs(dx) + abs(dy) > 1:
+                    continue
+                if 0 < self.mx + dx * 3 < fight_map.w and 0 < self.my + dy * 3 < fight_map.h:
+                    total_point.append((self.mx + dx * 3, self.my + dy * 3))
+
+        self.attack_cell = total_point
+        self.show_attack_range = True
+
+    def draw_attack_cell(self, map_x, map_y):
+        """
+        绘制攻击目标
+        """
+        if not self.show_attack_range:
+            return
+        # 不能操作正在行走的单位
+        if self.walking:
+            return
+        # 画格子
+        for point in self.attack_cell:
+            big_x = int((point[0] - 1) / 3)
+            big_y = int((point[1] - 1) / 3)
+            Sprite.blit(g.screen, g.magic_len_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
+
+    def do_attack(self, fight_mgr):
+        """
+        攻击
+        """
+        pass
+
 
 class FightMenu:
     """
@@ -346,7 +390,8 @@ class FightMenu:
         self.img_btn_magic_2 = pygame.image.load('./resource/PicLib/all_sys/btn_magic_2.png').convert_alpha()
         self.btn_move = Button(self.x, self.y, imgNormal=self.img_btn_move_1, imgMove=self.img_btn_move_2,
                                callBackFunc=self.move_click)
-        self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2)
+        self.btn_attack = Button(self.x, self.y, imgNormal=self.img_btn_attack_1, imgMove=self.img_btn_attack_2,
+                                 callBackFunc=self.attack_click)
         self.btn_magic = Button(self.x, self.y, imgNormal=self.img_btn_magic_1, imgMove=self.img_btn_magic_2,
                                 callBackFunc=self.magic_click)
 
@@ -385,6 +430,8 @@ class FightMenu:
         # 如果正在选择仙术，那么不能使用移动功能
         if self.fight_mgr.select_skill_target:
             return
+        if self.fight_mgr.current_fighter.show_attack_range:
+            return
         if self.fight_mgr.current_fighter.show_walk_cell:
             self.fight_mgr.current_fighter.show_walk_cell = False
         else:
@@ -394,11 +441,27 @@ class FightMenu:
         # 如果正在移动，那么不能使用仙术功能
         if self.fight_mgr.current_fighter.show_walk_cell:
             return
+        if self.fight_mgr.current_fighter.show_attack_range:
+            return
         if self.fight_mgr.current_fighter:
             if not self.fight_mgr.magic_plane.switch:
                 self.fight_mgr.magic_plane.show(self.fight_mgr.current_fighter)
             else:
                 self.fight_mgr.magic_plane.hide()
+
+    def attack_click(self):
+        """
+        攻击按钮单击事件
+        """
+        print("进来了")
+        if self.fight_mgr.current_fighter.show_attack_range:
+            self.fight_mgr.current_fighter.show_attack_range = False
+            return
+        # 如果正在选择仙术，那么不能使用攻击
+        if self.fight_mgr.select_skill_target:
+            return
+        self.fight_mgr.select_attack_target = True
+        self.fight_mgr.current_fighter.open_attack_cell(self.fight_mgr.fight_map)
 
 
 class FighterInfoPlane:
@@ -703,6 +766,7 @@ class FightManager:
         self.switch = False  # 是否打开战斗
         self.is_down = False  # 鼠标是否按下
         self.select_skill_target = False  # 是否正在选择施法目标
+        self.select_attack_target = False  # 是否正在选择攻击目标
         self.fight_menu = FightMenu(surface, 530, 100, self)
         self.info_plane = FighterInfoPlane()
         self.magic_plane = MagicPlane(self)
@@ -763,6 +827,7 @@ class FightManager:
         # 绘制可行走区域格子
         if self.current_fighter:
             self.current_fighter.draw_walk_cell(self.fight_map.x, self.fight_map.y)
+            self.current_fighter.draw_attack_cell(self.fight_map.x, self.fight_map.y)
         if self.select_skill_target:
             # 绘制施法距离
             self.current_fighter.draw_skill_range(self.fight_map.x, self.fight_map.y)
@@ -785,20 +850,30 @@ class FightManager:
             if self.select_skill_target:
                 self.select_skill_target = False
                 return
+            if self.select_attack_target:
+                self.select_attack_target = False
+                self.current_fighter.show_attack_range = False
+                return
             # 关闭战斗菜单
             if self.fight_menu.switch:
                 self.fight_menu.switch = False
                 return
         # 左键单击事件
+        # 战斗菜单
+        if self.fight_menu.switch:
+            self.fight_menu.mouse_down(x, y)
+        # 施法
         if self.select_skill_target:
-            # TODO：施法
             self.current_fighter.do_skill(self)
             return
-
+        # 攻击
+        if self.select_attack_target:
+            self.current_fighter.do_attack(self)
+            return
+        # 地图拖动
         self.is_down = True
         self.mu_x = x - self.fight_map.x
         self.mu_y = y - self.fight_map.y
-        self.fight_menu.mouse_down(x, y)
 
     def mouse_move(self, x, y):
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
@@ -837,11 +912,11 @@ class FightManager:
         # 小格子
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
+        self.is_down = False
         # 仙术面板
         if self.magic_plane.switch:
             self.magic_plane.mouse_up(x, y, pressed)
             return
-        self.is_down = False
         self.fight_menu.mouse_up(x, y)
         # 选中友军
         if self.select_teammate(mx, my):
