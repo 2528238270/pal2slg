@@ -6,6 +6,7 @@ qq:871245007
 """
 import json
 import random
+from copy import deepcopy
 
 import pygame
 from pygame.surface import Surface
@@ -215,6 +216,45 @@ class Fighter(Walker):
         else:
             damage = damage - target.defense
         return int(damage)
+
+    def move_fighter(self, mx, my, fight_map, fighter_list):
+        """
+        移动战斗者
+        fighter_list:地图上所有的战斗者
+        mx,my：小格子
+        """
+        # 深拷贝一份地图行走层，把敌人设置成障碍物，把友军设置为不可寻路（可通过）
+        walk_data = deepcopy(fight_map.walk_data)
+        for fighter in fighter_list:
+            if fighter is self:
+                continue
+            if fighter.is_enemy == self.is_enemy:  # 是队友的情况,直接取消移动（你不可能跟队友站在同一个格子上吧）
+                if fighter.mx == mx and fighter.my == my:
+                    return
+            # 是敌人的情况，把敌人上下左右斜角设置成障碍（小格子）
+            walk_data[fighter.mx][fighter.my] = 1
+            if fighter.my - 1 >= 0:
+                walk_data[fighter.mx][fighter.my - 1] = 1
+            if fighter.my + 1 < walk_data.h:
+                walk_data[fighter.mx][fighter.my + 1] = 1
+            if fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my] = 1
+            if fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my] = 1
+
+            if fighter.my - 1 >= 0 and fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my - 1] = 1
+            if fighter.my + 1 < walk_data.h and fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my + 1] = 1
+            if fighter.my + 1 < walk_data.h and fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my + 1] = 1
+            if fighter.my - 1 >= 0 and fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my - 1] = 1
+
+        for point in self.walk_cell:
+            if point[0] == mx and point[1] == my:
+                self.find_path(walk_data, [mx, my])
+                return
 
 
 class FightMenu:
@@ -725,30 +765,37 @@ class FightManager:
                 self.info_plane.hide()
 
     def mouse_up(self, x, y, pressed):
+        # 小格子
+        mx = int((x - self.fight_map.x) / 48) * 3 + 1
+        my = int((y - self.fight_map.y) / 48) * 3 + 1
         # 仙术面板
         if self.magic_plane.switch:
             self.magic_plane.mouse_up(x, y, pressed)
             return
         self.is_down = False
         self.fight_menu.mouse_up(x, y)
-        # 选中格子
-        mx = int((x - self.fight_map.x) / 48) * 3 + 1
-        my = int((y - self.fight_map.y) / 48) * 3 + 1
+        # 选中友军
+        if self.select_teammate(mx, my):
+            return
+        # 移动人物
+        if self.current_fighter and self.current_fighter.show_walk_cell:
+            self.current_fighter.move_fighter(mx, my, self.fight_map, self.fighter_list)
+            return
+
+    def select_teammate(self, mx, my):
+        """
+        选中友军
+        """
         print(mx, my)
         for fighter in self.fighter_list:
             if fighter.mx == mx and fighter.my == my:
                 if fighter.is_enemy:  # 只能选择友军
-                    return
+                    return True
                 # 显示这个人的移动范围
                 self.fight_menu.switch = True
                 self.current_fighter = fighter
-                return
-        # 移动
-        if self.current_fighter and self.current_fighter.show_walk_cell:
-            for point in self.current_fighter.walk_cell:
-                if point[0] == mx and point[1] == my:
-                    self.current_fighter.find_path(self.fight_map.walk_data, [mx, my])
-                    return
+                return True
+        return False
 
     def draw_skill_cell(self):
         """
