@@ -9,14 +9,14 @@ class Animation:
     def __init__(self, x, y, img, dw, dh, time, loop, frame_range, frame_callback=None, done_callback=None, fps=60,
                  **kwargs):
         """
-        :param x:绘制动画的中心点（不是左上角啦）
-        :param y:绘制动画的中心点（不是左上角啦）
+        :param x:绘制动画的中心点（不是左上角）
+        :param y:绘制动画的中心点（不是左上角）
         :param img:序列帧图片
         :param dw:单位宽度
         :param dh:单位高度
         :param time:动画播放时长,单位毫秒
         :param loop:否是循环播放
-        :param frame_range:动画帧范围
+        :param frame_range:动画帧范围,第一帧为0，比如[0,3]为4帧 [1,3]为3帧
         :param frame_callback:帧回调
         :param done_callback:完成回调
         """

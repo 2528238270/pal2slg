@@ -1,0 +1,53 @@
+{
+  "name": "苏媚",
+  "be_attack_id": "1",
+  "idle_ani": {
+    "id": "1-1",
+    "time": 700,
+    "frame_range": [0,6],
+    "cell_w": 512,
+    "cell_h": 432
+  },
+  "fighter_magic_ani": {
+    "id": "1-2",
+    "time": 3000,
+    "frame_range": [0,20],
+    "sound_frame": [
+      ["1", 15]
+    ],
+    "release_magic_frame": 15,
+    "cell_w": 512,
+    "cell_h": 432
+  },
+  "magic_ani": {
+    "id": "1",
+    "time": 2000,
+    "frame_range": [0,29],
+    "sound_frame": [
+      ["1", 15]
+    ],
+    "attack_frame": [8,10],
+    "cell_w": 384,
+    "cell_h": 384
+  },
+  "attack_ani": {
+    "id": "1",
+    "time": 2000,
+    "frame_range": [0,20],
+    "sound_frame": [
+      ["1", 15]
+    ],
+    "attack_frame": [8,10],
+    "move_frame": [[8,7],[10,12]],
+    "extra_frame": [10,15],
+    "cell_w": 66,
+    "cell_h": 66
+  },
+  "attack_extra_ani":{
+    "id": 1,
+    "time": 2000,
+    "frame_range": [0,20],
+    "cell_w": 66,
+    "cell_h": 66
+  }
+}

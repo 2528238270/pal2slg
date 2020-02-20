@@ -780,6 +780,12 @@ class FightManager:
         self.mouse_my = 0
         # 伤害动画列表
         self.damage_list = []
+        # 是否进入单体攻击动画
+        self.single_attack_animation = False
+        # 战斗播放器
+        self.fight_player = FightPlayer(self, 2)
+        self.single_attack_animation = True
+        self.fight_player.start(1, 1)
 
     def start(self, fighter_list, map_id):
         """
@@ -793,6 +799,10 @@ class FightManager:
         if not self.switch:
             return
         self.damage_logic()
+        if self.single_attack_animation:
+            # 单体攻击动画播放逻辑
+            self.fight_player.logic()
+            return
         self.fight_menu.logic()
         # 渲染排序，显示正确的层级
         self.fighter_list.sort(key=lambda fight: fight.y)
@@ -809,6 +819,13 @@ class FightManager:
 
     def render(self):
         if not self.switch:
+            return
+        if self.single_attack_animation:
+            # 单体攻击动画渲染
+            self.fight_player.render()
+            # 画伤害
+            for damage in self.damage_list:
+                damage.render()
             return
         Sprite.blit(self.surface, self.fight_map.btm_img, self.fight_map.x, self.fight_map.y)
         # 渲染战斗者
@@ -841,6 +858,9 @@ class FightManager:
         self.magic_plane.render()
 
     def mouse_down(self, x, y, pressed):
+        if self.single_attack_animation:
+            # TODO:单体攻击动画没有任何事件
+            return
         # 仙术面板
         if self.magic_plane.switch:
             self.magic_plane.mouse_down(x, y, pressed)
@@ -880,7 +900,9 @@ class FightManager:
         my = int((y - self.fight_map.y) / 48) * 3 + 1
         self.mouse_mx = int((x - self.fight_map.x) / 48)
         self.mouse_my = int((y - self.fight_map.y) / 48)
-
+        if self.single_attack_animation:
+            # TODO:单体攻击动画没有任何事件
+            return
         # 仙术面板
         if self.magic_plane.switch:
             self.magic_plane.mouse_move(x, y)
@@ -912,6 +934,9 @@ class FightManager:
         # 小格子
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
+        if self.single_attack_animation:
+            # TODO:单体攻击动画没有任何事件
+            return
         self.is_down = False
         # 仙术面板
         if self.magic_plane.switch:
@@ -1013,3 +1038,173 @@ class FightManager:
         小格子转大格子
         """
         return int((mx - 1) / 3), int((my - 1) / 3)
+
+
+class FighterAnimation:
+    """
+    战斗者的战斗动画
+    """
+
+    def __init__(self, fighter_id, fight_player, is_enemy):
+        """
+        初始化战斗者动画
+        """
+        self.idle_ani = None  # 闲置状态动画
+        self.be_attacked_img = None  # 受击帧
+        self.fighter_magic_ani = None  # 施法的人物动作动画
+        self.magic_ani = None  # 法术动画
+        self.attack_ani = None  # 攻击动画
+        self.attack_extra_ani = None  # 攻击附加动画
+        self.state = 0  # 0闲置状态 1受击状态 2施法状态 3攻击状态
+        self.fight_player = fight_player
+        self.is_enemy = is_enemy  # 是否是敌人
+        self.ani_list = []
+        if self.is_enemy:
+            self.fighter_x = 200
+            self.fighter_y = 150
+        else:
+            self.fighter_x = 450
+            self.fighter_y = 300
+
+        # 加载配置文件
+        with open(f'./resource/fighter_animation/{fighter_id}.json', 'r', encoding='utf8') as file:
+            cfg = json.load(file)
+        # 創建闲置动画
+        ani_id = cfg['idle_ani']['id']
+        dw = cfg['idle_ani']['cell_w']
+        dh = cfg['idle_ani']['cell_h']
+        time = cfg['idle_ani']['time']
+        frame_range = cfg['idle_ani']['frame_range']
+        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+        self.idle_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, True, frame_range, fps=g.fps)
+        # 创建施法动作动画
+        ani_id = cfg['fighter_magic_ani']['id']
+        dw = cfg['fighter_magic_ani']['cell_w']
+        dh = cfg['fighter_magic_ani']['cell_h']
+        time = cfg['fighter_magic_ani']['time']
+        frame_range = cfg['fighter_magic_ani']['frame_range']
+        sound_frame = cfg['fighter_magic_ani']['sound_frame']
+        release_magic_frame = cfg['fighter_magic_ani']['release_magic_frame']
+        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+        self.fighter_magic_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, False, frame_range,
+                                           fps=g.fps,
+                                           frame_callback=self.fighter_magic_cb(sound_frame, release_magic_frame),
+                                           done_callback=self.fighter_magic_done_cb)
+        # 创建法术动画
+        ani_id = cfg['magic_ani']['id']
+        dw = cfg['magic_ani']['cell_w']
+        dh = cfg['magic_ani']['cell_h']
+        time = cfg['magic_ani']['time']
+        frame_range = cfg['magic_ani']['frame_range']
+        sound_frame = cfg['magic_ani']['sound_frame']
+        attack_frame = cfg['magic_ani']['attack_frame']
+
+        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+        self.magic_ani = Animation(200, 200, ani_img, dw, dh, time, False, frame_range, fps=g.fps,
+                                   frame_callback=self.magic_cb(sound_frame, attack_frame))
+
+    def set_state(self, state):
+        # self.state = state
+        # if state == 0:
+        #     self.ani_list.append(self.idle_ani)
+        # elif state == 2:
+        #     self.ani_list.append(self.fighter_magic_ani)
+        pass
+
+    def fighter_magic_cb(self, sound_frame, release_magic_frame):
+        """
+        施法动作帧回调
+        """
+
+        def cb(frame):
+            for sf in sound_frame:
+                if sf[1] == frame:
+                    # TODO:播放音效
+                    print("播放音效", sf[0])
+                    break
+            if frame == release_magic_frame:
+                # 开始播放法术动画
+                self.ani_list.append(self.magic_ani)
+
+        return cb
+
+    def fighter_magic_done_cb(self,frame):
+        self.state = 0
+
+    def magic_cb(self, sound_frame, attack_frame):
+        """
+        TODO:法术动画回调
+        """
+        pass
+
+    def logic(self):
+        """
+        逻辑更新
+        """
+        if self.state == 0:
+            self.idle_ani.update()
+        elif self.state == 2:
+            self.fighter_magic_ani.update()
+        for animation in self.ani_list[::-1]:
+            animation.update()
+            # 动画播放完成，删除动画
+            if not animation.loop and animation.least_once:
+                self.ani_list.remove(animation)
+
+    def render(self):
+        if self.state == 0:
+            self.idle_ani.draw(g.screen)
+        elif self.state == 2:
+            self.fighter_magic_ani.draw(g.screen)
+        for animation in self.ani_list[::-1]:
+            animation.draw(g.screen)
+
+
+class FightPlayer:
+    """
+    战斗动画播放器，这个是单体攻击的时候用的。
+    整个战斗动画播放器应该独立于战斗系统，对外提供相关接口即可。
+    需求整理：
+        1.fighter需要攻击动画
+        2.攻击动画有可能是组合动画，需要在指定帧组合另一个动画进行播放
+        3.攻击动画会产生位移，需要在指定的[开始帧,结束帧]移动到某一位置
+        4.攻击动画会在指定帧播放音效
+        5.攻击动画需要在指定帧使对方进入受击状态，在指定帧使对方解除受击状态
+    """
+
+    def __init__(self, fight_mgr, fight_bg_id):
+        """
+        初始化战斗动画播放器
+        fight_mgr:战斗管理器
+        fight_bg_id:战斗背景图id
+        """
+        self.bg = pygame.image.load(f'./resource/PicLib/all_fight/{fight_bg_id}.jpg')
+        self.fight_mgr = fight_mgr
+        self.teammate = None
+        self.enemy = None
+        self.count = 0
+
+    def start(self, teammate_id, enemy_id):
+        """
+        开始播放战斗动画
+        """
+        self.teammate = FighterAnimation(teammate_id, self, False)
+        # self.enemy = FighterAnimation(enemy_id,self,True)
+        self.teammate.set_state(0)
+        # self.enemy.set_state(0)
+
+    def logic(self):
+        self.teammate.logic()
+        # self.enemy.logic()
+        self.count += 1
+        if self.count == 300:
+            self.teammate.state = 2
+
+    def render(self):
+        Sprite.blit(g.screen, self.bg, 0, 0)
+        if self.teammate.state == 2:
+            # self.enemy.render()
+            self.teammate.render()
+        else:
+            self.teammate.render()
+            # self.enemy.render()
