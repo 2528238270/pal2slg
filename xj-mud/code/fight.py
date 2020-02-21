@@ -786,14 +786,34 @@ class FightManager:
         self.fight_player = FightPlayer(self, 2)
         self.single_attack_animation = True
         t_fight_data = [
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 100},
             {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 300},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 400},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 500},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 600},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 700},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 800},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            #
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            #
+            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            #
+            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
+            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            # {"is_enemy": False, "type": "attack", "damage": 400},
         ]
         self.fight_player.start(1, 2, t_fight_data)
 
@@ -1071,7 +1091,10 @@ class FighterAnimation:
         self.ani_list = []
         self.action_done = False  # 动作是否做完了，如果做完了，战斗播放器会检测到，并且继续下一个动画播放
         self.damage = 0
-
+        self.move_forward = False  # 是否向敌人移动
+        self.move_back = False  # 是否向自己位置移动
+        self.single_frame_length = 0  # 每帧移动
+        self.magic_count = 0  # 法术结束+1 施法动作结束+1
         if self.is_enemy:
             self.fighter_x = 200
             self.fighter_y = 150
@@ -1082,6 +1105,9 @@ class FighterAnimation:
             self.fighter_y = 300
             self.other_x = 200
             self.other_y = 150
+
+        self.k = (self.other_y - self.fighter_y) / (self.other_x - self.fighter_x)
+
         # 加载配置文件
         with open(f'./resource/fighter_animation/{fighter_id}.json', 'r', encoding='utf8') as file:
             cfg = json.load(file)
@@ -1109,6 +1135,33 @@ class FighterAnimation:
                                            fps=g.fps,
                                            frame_callback=self.fighter_magic_cb(sound_frame, release_magic_frame),
                                            done_callback=self.fighter_magic_done_cb)
+        # 创建人物攻击动画
+        ani_id = cfg['attack_ani']['id']
+        dw = cfg['attack_ani']['cell_w']
+        dh = cfg['attack_ani']['cell_h']
+        time = cfg['attack_ani']['time']
+        frame_range = cfg['attack_ani']['frame_range']
+        sound_frame = cfg['attack_ani']['sound_frame']
+        extra_frame = cfg['attack_ani']['extra_frame']
+        attack_frame = cfg['attack_ani']['attack_frame']
+        move_frame = cfg['attack_ani']['move_frame']
+
+        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+        self.attack_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, False, frame_range,
+                                    fps=g.fps,
+                                    frame_callback=self.attack_cb(sound_frame, attack_frame, extra_frame, move_frame),
+                                    done_callback=self.attack_done_cb)
+        # 创建攻击额外动画
+        if cfg['attack_extra_ani'] is None:
+            return
+        ani_id = cfg['attack_extra_ani']['id']
+        frame_range = cfg['attack_extra_ani']['frame_range']
+        dw = cfg['attack_extra_ani']['cell_w']
+        dh = cfg['attack_extra_ani']['cell_h']
+        time = self.attack_ani.time / self.attack_ani.frame * (frame_range[1] - frame_range[0] + 1)
+        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+        self.attack_extra_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, False, frame_range,
+                                          fps=g.fps)
         # 加载配置文件
         if magic_id is None:
             return
@@ -1134,6 +1187,63 @@ class FighterAnimation:
                                    frame_callback=self.magic_cb(sound_frame, attack_frame),
                                    done_callback=self.magic_cb_done)
 
+    def attack_cb(self, sound_frame, attack_frame, extra_frame, move_frame):
+        """
+        攻击回调
+        """
+
+        def cb(frame):
+            for sf in sound_frame:
+                if sf[1] == frame:
+                    # TODO:播放音效
+                    print("播放音效", sf[0])
+                    break
+            if frame == attack_frame[0]:
+                # 敌人改为受击状态
+                other = self.fight_player.get_other(self)
+                other.state = 1
+                # 攻击帧，出现伤害
+                g.fight_mgr.damage_list.append(DamageAnimation('attack', self.damage, self.other_x, self.other_y))
+            elif frame == attack_frame[1]:
+                # 敌人状态还原
+                other = self.fight_player.get_other(self)
+                other.state = 0
+            if extra_frame is not None and frame == extra_frame:
+                # 有额外动画，触发而外动画
+                self.attack_extra_ani.reset()
+                self.ani_list.append(self.attack_extra_ani)
+            # 触发移动事件
+            if move_frame is not None and len(move_frame) == 2:
+                if frame == move_frame[0][0]:
+                    # TODO:向敌人移动
+                    total_frame = move_frame[0][1] - move_frame[0][0] + 1
+                    self.single_frame_length = 250 / total_frame
+                    self.move_forward = True
+                    print("向敌人移动")
+                if frame == move_frame[1][0]:
+                    # TODO:回到自己的位置
+                    total_frame = move_frame[1][1] - move_frame[1][0] + 1
+                    self.single_frame_length = 250 / total_frame
+                    self.move_back = True
+
+        return cb
+
+    def attack_done_cb(self, frame):
+        """
+        普通攻击完成回调
+        """
+        self.state = 0  # 还原为闲置状态
+        print(self.is_enemy, '普通攻击', '重置idle')
+        self.attack_ani.reset()
+        self.move_back = False
+        self.move_forward = False
+        self.attack_ani.x = self.fighter_x
+        self.attack_ani.y = self.fighter_y
+        if self.attack_extra_ani:
+            self.attack_extra_ani.x = self.fighter_x
+            self.attack_extra_ani.y = self.fighter_y
+        self.action_done = True  # 行动结束
+
     def fighter_magic_cb(self, sound_frame, release_magic_frame):
         """
         施法动作帧回调
@@ -1147,15 +1257,17 @@ class FighterAnimation:
                     break
             if frame == release_magic_frame:
                 # 开始播放法术动画
-                print("施法")
-                print(self)
                 self.magic_ani.reset()
                 self.ani_list.append(self.magic_ani)
 
         return cb
 
     def fighter_magic_done_cb(self, frame):
+        print('施法动作结束')
+        self.magic_count += 1
         self.state = 0
+        if self.magic_count == 2:
+            self.action_done = True
 
     def magic_cb(self, sound_frame, attack_frame):
         """
@@ -1184,7 +1296,10 @@ class FighterAnimation:
         return cb
 
     def magic_cb_done(self, frame):
-        self.action_done = True
+        print('法术结束')
+        self.magic_count += 1
+        if self.magic_count == 2:
+            self.action_done = True
 
     def logic(self):
         """
@@ -1194,6 +1309,43 @@ class FighterAnimation:
             self.idle_ani.update()
         elif self.state == 2:
             self.fighter_magic_ani.update()
+            # print("施法逻辑")
+        elif self.state == 3:  # 攻击动画
+            self.attack_ani.update()
+            if self.move_forward:
+                if self.is_enemy:
+                    self.attack_ani.x += int(self.single_frame_length / self.attack_ani.frame_count)
+                    self.attack_ani.y += int(self.single_frame_length / self.attack_ani.frame_count * self.k)
+                    if self.attack_ani.x >= self.other_x:
+                        self.attack_ani.x = self.other_x
+                        self.attack_ani.y = self.other_y
+                        self.move_forward = False
+                else:
+                    self.attack_ani.x -= int(self.single_frame_length / self.attack_ani.frame_count)
+                    self.attack_ani.y -= int(self.single_frame_length / self.attack_ani.frame_count * self.k)
+                    if self.attack_ani.x <= self.other_x:
+                        self.attack_ani.x = self.other_x
+                        self.attack_ani.y = self.other_y
+                        self.move_forward = False
+            if self.move_back:
+                if self.is_enemy:
+                    self.attack_ani.x -= int(self.single_frame_length / self.attack_ani.frame_count)
+                    self.attack_ani.y -= int(self.single_frame_length / self.attack_ani.frame_count * self.k)
+                    if self.attack_ani.x <= self.fighter_x:
+                        self.attack_ani.x = self.fighter_x
+                        self.attack_ani.y = self.fighter_y
+                        self.move_back = False
+                else:
+                    self.attack_ani.x += int(self.single_frame_length / self.attack_ani.frame_count)
+                    self.attack_ani.y += int(self.single_frame_length / self.attack_ani.frame_count * self.k)
+                    if self.attack_ani.x >= self.fighter_x:
+                        self.attack_ani.x = self.fighter_x
+                        self.attack_ani.y = self.fighter_y
+                        self.move_back = False
+            if self.attack_extra_ani:
+                self.attack_extra_ani.x = self.attack_ani.x
+                self.attack_extra_ani.y = self.attack_ani.y
+
         for animation in self.ani_list[::-1]:
             animation.update()
             # 动画播放完成，删除动画
@@ -1214,15 +1366,27 @@ class FighterAnimation:
                         self.fighter_y - int(self.be_attacked_img.get_height() / 2))
         elif self.state == 2:
             self.fighter_magic_ani.draw(g.screen)
+        elif self.state == 3:
+            self.attack_ani.draw(g.screen)
 
     def render_other(self):
         # 其他渲染
         for animation in self.ani_list[::-1]:
-            animation.draw(g.screen)
+            if animation is self.attack_extra_ani:
+                # 攻击特效需要blend
+                animation.blend_draw(g.screen, pygame.BLEND_ADD)
+            else:
+                animation.draw(g.screen)
 
     def magic(self, damage):
         self.damage = damage
         self.state = 2
+        self.magic_count=0
+        print(self.is_enemy, "施法开始")
+
+    def attack(self, damage):
+        self.damage = damage
+        self.state = 3
 
 
 class FightPlayer:
@@ -1292,6 +1456,7 @@ class FightPlayer:
             if len(self.fight_data) == 0:
                 return  # TODO:战斗结束
             self.cur_data = self.fight_data.pop(0)
+            print(self.cur_data)
             self.action()
 
     def action(self):
@@ -1300,16 +1465,23 @@ class FightPlayer:
         """
         cur_fighter = self.enemy if self.cur_data['is_enemy'] else self.teammate
         if self.cur_data['type'] == 'magic':
+            print("魔法")
             cur_fighter.magic(self.cur_data['damage'])
+        elif self.cur_data['type'] == 'attack':
+            cur_fighter.attack(self.cur_data['damage'])
 
     def render(self):
         Sprite.blit(g.screen, self.bg, 0, 0)
-        if self.teammate.state == 2:
-            self.enemy.render()
-            self.teammate.render()
-        else:
-            self.teammate.render()
-            self.enemy.render()
+        render_obj_list = [self.enemy, self.teammate]
+        render_obj_list.sort(key=lambda obj: obj.attack_ani.y)
+        for obj in render_obj_list:
+            obj.render()
+        # if self.teammate.state == 2:
+        #     self.enemy.render()
+        #     self.teammate.render()
+        # else:
+        #     self.teammate.render()
+        #     self.enemy.render()
 
         self.enemy.render_other()
         self.teammate.render_other()

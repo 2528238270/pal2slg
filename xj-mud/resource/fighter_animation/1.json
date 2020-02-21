@@ -20,23 +20,22 @@
     "cell_h": 432
   },
   "attack_ani": {
-    "id": "1",
+    "id": "1-4",
     "time": 2000,
-    "frame_range": [0,20],
+    "frame_range": [0,15],
     "sound_frame": [
       ["1", 15]
     ],
-    "attack_frame": [8,10],
-    "move_frame": [[8,7],[10,12]],
-    "extra_frame": [10,15],
-    "cell_w": 66,
-    "cell_h": 66
+    "attack_frame": [9,11],
+    "move_frame": [[2,5],[11,15]],
+    "extra_frame": 5,
+    "cell_w": 512,
+    "cell_h": 432
   },
   "attack_extra_ani":{
-    "id": 1,
-    "time": 2000,
-    "frame_range": [0,20],
-    "cell_w": 66,
-    "cell_h": 66
+    "id": "1-5",
+    "frame_range": [0,5],
+    "cell_w": 512,
+    "cell_h": 432
   }
 }

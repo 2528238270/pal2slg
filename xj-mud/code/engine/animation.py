@@ -1,3 +1,4 @@
+import pygame
 from pygame.surface import Surface
 
 
@@ -23,6 +24,7 @@ class Animation:
         self.x = x
         self.y = y
         self.img = img
+        self.time = time
         # 一共多少帧
         self.frame_range = frame_range
         self.frame = frame_range[1] - frame_range[0] + 1
@@ -75,6 +77,16 @@ class Animation:
         cell_y = int(self.current_frame / self.col)
         self.draw_cell(surface, self.img, dest_x, dest_y, cell_x, cell_y, self.dw, self.dh)
 
+    def blend_draw(self, surface, blend_type):
+        """
+        带alpha混合的draw
+        """
+        dest_x = self.x - self.dw / 2
+        dest_y = self.y - self.dh / 2
+        cell_x = self.current_frame % self.col
+        cell_y = int(self.current_frame / self.col)
+        self.draw_cell(surface, self.img, dest_x, dest_y, cell_x, cell_y, self.dw, self.dh, blend_type)
+
     def draw_src(self, surface, x, y):
         """
         绘图，把x，y作为左上角绘制
@@ -92,7 +104,7 @@ class Animation:
         self.least_once = False
 
     @staticmethod
-    def draw_cell(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32):
+    def draw_cell(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32, blend_type=0):
         """
         绘制精灵图中指定x,y的图像
         :param dest: surface类型，要绘制到的目标surface
@@ -105,7 +117,7 @@ class Animation:
         :param cell_h: 单个精灵的高度
         :return:
         """
-        dest.blit(source, (x, y), (cell_x * cell_w, cell_y * cell_h, cell_w, cell_h))
+        dest.blit(source, (x, y), (cell_x * cell_w, cell_y * cell_h, cell_w, cell_h), special_flags=blend_type)
 
 
 class Animator:
