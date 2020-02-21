@@ -1,0 +1,12 @@
+{
+    "id": "1",
+    "time": 2500,
+    "frame_range": [0,29],
+    "sound_frame": [
+      ["1", 15]
+    ],
+    "attack_frame": [8,29],
+    "cell_w": 384,
+    "cell_h": 384,
+    "full_screen": false
+}

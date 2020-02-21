@@ -1,6 +1,6 @@
 {
   "name": "苏媚",
-  "be_attack_id": "1",
+  "be_attack_id": "1-3",
   "idle_ani": {
     "id": "1-1",
     "time": 700,
@@ -15,20 +15,9 @@
     "sound_frame": [
       ["1", 15]
     ],
-    "release_magic_frame": 15,
+    "release_magic_frame": 6,
     "cell_w": 512,
     "cell_h": 432
-  },
-  "magic_ani": {
-    "id": "1",
-    "time": 2000,
-    "frame_range": [0,29],
-    "sound_frame": [
-      ["1", 15]
-    ],
-    "attack_frame": [8,10],
-    "cell_w": 384,
-    "cell_h": 384
   },
   "attack_ani": {
     "id": "1",

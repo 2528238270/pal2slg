@@ -1,34 +1,23 @@
 {
-  "name": "大光头吴涛",
-  "be_attack_id": "1",
+  "name": "孔璘",
+  "be_attack_id": "2-3",
   "idle_ani": {
     "id": "2-1",
-    "time": 300,
-    "frame_range": [0,1],
-    "cell_w": 200,
-    "cell_h": 250
+    "time": 500,
+    "frame_range": [0,3],
+    "cell_w": 628,
+    "cell_h": 512
   },
   "fighter_magic_ani": {
     "id": "2-2",
     "time": 2000,
-    "frame_range": [0,9],
+    "frame_range": [0,7],
     "sound_frame": [
       ["1", 3]
     ],
     "release_magic_frame": 3,
-    "cell_w": 200,
-    "cell_h": 250
-  },
-  "magic_ani": {
-    "id": "1",
-    "time": 2000,
-    "frame_range": [0,29],
-    "sound_frame": [
-      ["1", 15]
-    ],
-    "attack_frame": [8,10],
-    "cell_w": 384,
-    "cell_h": 384
+    "cell_w": 628,
+    "cell_h": 512
   },
   "attack_ani": {
     "id": "1",
