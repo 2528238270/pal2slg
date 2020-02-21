@@ -785,7 +785,11 @@ class FightManager:
         # 战斗播放器
         self.fight_player = FightPlayer(self, 2)
         self.single_attack_animation = True
-        self.fight_player.start(1, 2, None)
+        t_fight_data = [
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 100},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 100}
+        ]
+        self.fight_player.start(1, 2, t_fight_data)
 
     def start(self, fighter_list, map_id):
         """
@@ -1100,6 +1104,8 @@ class FighterAnimation:
                                            frame_callback=self.fighter_magic_cb(sound_frame, release_magic_frame),
                                            done_callback=self.fighter_magic_done_cb)
         # 加载配置文件
+        if magic_id is None:
+            return
         with open(f'./resource/fighter_animation/magic_{magic_id}.json', 'r', encoding='utf8') as file:
             cfg = json.load(file)
         # 创建法术动画
@@ -1119,7 +1125,8 @@ class FighterAnimation:
             magic_y = self.other_y
         ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
         self.magic_ani = Animation(magic_x, magic_y, ani_img, dw, dh, time, False, frame_range, fps=g.fps,
-                                   frame_callback=self.magic_cb(sound_frame, attack_frame))
+                                   frame_callback=self.magic_cb(sound_frame, attack_frame),
+                                   done_callback=self.magic_cb_done)
 
     def fighter_magic_cb(self, sound_frame, release_magic_frame):
         """
@@ -1167,6 +1174,9 @@ class FighterAnimation:
 
         return cb
 
+    def magic_cb_done(self, frame):
+        self.action_done = True
+
     def logic(self):
         """
         逻辑更新
@@ -1186,7 +1196,12 @@ class FighterAnimation:
         if self.state == 0:
             self.idle_ani.draw(g.screen)
         elif self.state == 1:
-            Sprite.blit(g.screen, self.be_attacked_img, self.fighter_x - int(self.be_attacked_img.get_width() / 2),
+            # 被攻击时产生抖动
+            offset_x = random.randint(1, 7)
+            if self.is_enemy:
+                offset_x *= -1
+            Sprite.blit(g.screen, self.be_attacked_img,
+                        offset_x + self.fighter_x - int(self.be_attacked_img.get_width() / 2),
                         self.fighter_y - int(self.be_attacked_img.get_height() / 2))
         elif self.state == 2:
             self.fighter_magic_ani.draw(g.screen)
@@ -1223,6 +1238,8 @@ class FightPlayer:
         self.fight_mgr = fight_mgr
         self.teammate = None
         self.enemy = None
+        self.fight_data = None
+        self.cur_data = None  # 当前数据
         self.count = 0
 
     def start(self, teammate_id, enemy_id, fight_data):
@@ -1233,19 +1250,47 @@ class FightPlayer:
             {"is_enemy":False,"type":"magic","magic_id":1,"damage":100}
         ]
         """
-        self.teammate = FighterAnimation(teammate_id, self, False, 1)
-        self.enemy = FighterAnimation(enemy_id, self, True, 1)
-        # self.teammate.set_state(0)
-        # self.enemy.set_state(0)
+        # 找出其中的魔法
+        t_magic = None
+        e_magic = None
+        for d in fight_data:
+            if d['type'] == 'magic':
+                if d['is_enemy']:
+                    e_magic = d['magic_id']
+                else:
+                    t_magic = d['magic_id']
+
+        self.teammate = FighterAnimation(teammate_id, self, False, t_magic)
+        self.enemy = FighterAnimation(enemy_id, self, True, e_magic)
+        self.fight_data = fight_data
 
     def logic(self):
         self.teammate.logic()
         self.enemy.logic()
         self.count += 1
-        if self.count == 180:
-            self.teammate.magic(100)
-        if self.count == 500:
-            self.enemy.magic(100)
+        if self.count == g.fps * 2:
+            # 闲置2秒后开始战斗
+            self.cur_data = self.fight_data.pop(0)
+            self.action()
+            return
+
+        # 战斗逻辑
+        if self.cur_data is None:
+            return
+        cur_fighter = self.enemy if self.cur_data['is_enemy'] else self.teammate
+        if cur_fighter.action_done:
+            if len(self.fight_data) == 0:
+                return  # TODO:战斗结束
+            self.cur_data = self.fight_data.pop(0)
+            self.action()
+
+    def action(self):
+        """
+        控制人物做出相应动作
+        """
+        cur_fighter = self.enemy if self.cur_data['is_enemy'] else self.teammate
+        if self.cur_data['type'] == 'magic':
+            cur_fighter.magic(self.cur_data['damage'])
 
     def render(self):
         Sprite.blit(g.screen, self.bg, 0, 0)
