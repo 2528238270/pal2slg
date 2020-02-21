@@ -47,7 +47,7 @@ class Animation:
         last_frame = self.current_frame
         self.current_count += 1
         self.current_frame = int(self.current_count / self.frame_count)
-        if self.current_frame >= self.frame_range[1]:
+        if self.current_frame > self.frame_range[1]:
             # 播放完成
             self.current_frame = self.frame_range[0]
             self.current_count = self.frame_range[0] * self.frame_count
