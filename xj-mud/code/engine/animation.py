@@ -89,6 +89,7 @@ class Animation:
         """
         self.current_frame = 0
         self.current_count = 0
+        self.least_once = False
 
     @staticmethod
     def draw_cell(dest, source, x, y, cell_x, cell_y, cell_w=32, cell_h=32):

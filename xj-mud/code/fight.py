@@ -787,7 +787,13 @@ class FightManager:
         self.single_attack_animation = True
         t_fight_data = [
             {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 100},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 100}
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 300},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 400},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 500},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 600},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 700},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 800},
         ]
         self.fight_player.start(1, 2, t_fight_data)
 
@@ -1141,6 +1147,9 @@ class FighterAnimation:
                     break
             if frame == release_magic_frame:
                 # 开始播放法术动画
+                print("施法")
+                print(self)
+                self.magic_ani.reset()
                 self.ani_list.append(self.magic_ani)
 
         return cb
@@ -1279,6 +1288,7 @@ class FightPlayer:
             return
         cur_fighter = self.enemy if self.cur_data['is_enemy'] else self.teammate
         if cur_fighter.action_done:
+            cur_fighter.action_done = False  # 这里复原，以便重复使用
             if len(self.fight_data) == 0:
                 return  # TODO:战斗结束
             self.cur_data = self.fight_data.pop(0)
