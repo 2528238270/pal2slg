@@ -55,7 +55,7 @@ class GameMap:
                 y = int.from_bytes(chunk[4:8], 'little')
                 v = int.from_bytes(chunk[8:12], 'little')
                 self.enter_point[x][y] = v
-        g.audio_player.music_play(map_id, -1)
+        g.audio_player.play_music(f"map{map_id}", -1)
 
     def roll(self, role_x, role_y, win_width=640, win_height=480):
         """

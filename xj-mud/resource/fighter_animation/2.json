@@ -13,7 +13,6 @@
     "time": 2000,
     "frame_range": [0,7],
     "sound_frame": [
-      ["1", 3]
     ],
     "release_magic_frame": 3,
     "cell_w": 628,

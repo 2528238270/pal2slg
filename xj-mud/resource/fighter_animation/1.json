@@ -13,7 +13,7 @@
     "time": 3000,
     "frame_range": [0,20],
     "sound_frame": [
-      ["1", 15]
+      ["4", 0]
     ],
     "release_magic_frame": 6,
     "cell_w": 512,
@@ -24,7 +24,8 @@
     "time": 2000,
     "frame_range": [0,15],
     "sound_frame": [
-      ["1", 15]
+      ["2", 0],
+      ["3", 6]
     ],
     "attack_frame": [9,11],
     "move_frame": [[2,5],[11,15]],

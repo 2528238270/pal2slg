@@ -1185,8 +1185,8 @@ class FighterAnimation:
         def cb(frame):
             for sf in sound_frame:
                 if sf[1] == frame:
-                    # TODO:播放音效
-                    print("播放音效", sf[0])
+                    # 播放音效
+                    g.audio_player.play_sound(sf[0])
                     break
             if frame == attack_frame[0]:
                 # 敌人改为受击状态
@@ -1242,8 +1242,8 @@ class FighterAnimation:
         def cb(frame):
             for sf in sound_frame:
                 if sf[1] == frame:
-                    # TODO:播放音效
-                    print("播放音效", sf[0])
+                    # 播放音效
+                    g.audio_player.play_sound(sf[0])
                     break
             if frame == release_magic_frame:
                 # 开始播放法术动画
@@ -1267,8 +1267,8 @@ class FighterAnimation:
         def cb(frame):
             for sf in sound_frame:
                 if sf[1] == frame:
-                    # TODO:播放音效
-                    print("播放音效", sf[0])
+                    # 播放音效
+                    g.audio_player.play_sound(sf[0])
                     break
             if frame == attack_frame[0]:
                 # 受击
