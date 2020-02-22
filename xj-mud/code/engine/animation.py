@@ -8,7 +8,7 @@ class Animation:
     """
 
     def __init__(self, x, y, img, dw, dh, time, loop, frame_range, frame_callback=None, done_callback=None, fps=60,
-                 **kwargs):
+                 need_blend=False, **kwargs):
         """
         :param x:绘制动画的中心点（不是左上角）
         :param y:绘制动画的中心点（不是左上角）
@@ -25,6 +25,7 @@ class Animation:
         self.y = y
         self.img = img
         self.time = time
+        self.need_blend = need_blend
         # 一共多少帧
         self.frame_range = frame_range
         self.frame = frame_range[1] - frame_range[0] + 1
@@ -147,7 +148,10 @@ class Animator:
         渲染各个动画
         """
         for animation in self.animations:
-            animation.draw(self.surface)
+            if animation.need_blend:
+                animation.blend_draw(self.surface, pygame.BLEND_ADD)
+            else:
+                animation.draw(self.surface)
 
     def add(self, x, y, img, dw, dh, time, loop, frame_range, frame_callback=None, done_callback=None):
         """

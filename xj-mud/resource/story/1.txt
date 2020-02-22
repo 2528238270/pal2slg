@@ -20,8 +20,16 @@ start_talk 2002
 # 移动苏媚到29,30,面向朝右
 # move_npc 0,29,30,3
 # 苏媚施法
-play_ani 1,150,170
+play_ani 1,150,170,0
 # 大光头求饶
 start_talk 2003
 # 大光头逃跑
-move_npc 2,73,19,3
+move_npc 2,70,19,3
+# 传送动画
+play_async_ani 4,270,250,1
+delay 1
+# 显示大光头和他爸爸
+show_npc 4,35,30,2
+show_npc 2,37,30,2
+play_music Xian015
+start_talk 2004

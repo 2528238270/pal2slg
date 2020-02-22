@@ -1,0 +1,10 @@
+# 测试动画
+pic_id 4
+loop 0
+dw 240
+dh 640
+# 单位毫秒
+time 2000
+frame_range 0,44
+# 在第7帧播放id为1的音效
+frame_callback 7,sound,1

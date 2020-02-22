@@ -1,0 +1,23 @@
+{
+  "name": "千叶",
+  "be_attack_id": "3-3",
+  "idle_ani": {
+    "id": "3-1",
+    "time": 400,
+    "frame_range": [0,2],
+    "cell_w": 640,
+    "cell_h": 480
+  },
+  "fighter_magic_ani": {
+    "id": "3-2",
+    "time": 2000,
+    "frame_range": [0,9],
+    "sound_frame": [
+    ],
+    "release_magic_frame": 3,
+    "cell_w": 640,
+    "cell_h": 480
+  },
+  "attack_ani": null,
+  "attack_extra_ani":null
+}

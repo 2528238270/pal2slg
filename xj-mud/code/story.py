@@ -17,7 +17,8 @@ class Command:
         self.cmd_name = cmd_name
         self.cmd_args = cmd_args
         for i in range(len(self.cmd_args)):
-            self.cmd_args[i] = int(self.cmd_args[i])
+            if self.cmd_args[i].isdigit():
+                self.cmd_args[i] = int(self.cmd_args[i])
         self.done = False  # 是否执行完成
         self.working = False  # 是否正在执行
 
@@ -174,7 +175,8 @@ class Command:
         ani_id = args[0]
         x = args[1]
         y = args[2]
-        self.ani = g.ani_factory.create(ani_id, x, y)
+        need_blend = bool(args[3])
+        self.ani = g.ani_factory.create(ani_id, x, y, need_blend=need_blend)
         self.working = True
 
     def play_ani_logic(self):
@@ -182,6 +184,26 @@ class Command:
             self.working = False
             self.done = True
 
+    def play_async_ani(self, *args):
+        """
+        播放异步动画，不会阻塞剧情播放器
+        """
+        ani_id = args[0]
+        x = args[1]
+        y = args[2]
+        need_blend = bool(args[3])
+        self.ani = g.ani_factory.create(ani_id, x, y, need_blend=need_blend)
+        self.working = False
+        self.done = True
+
+    def play_music(self, *args):
+        """
+        播放音乐
+        """
+        music_id = args[0]
+        g.audio_player.play_music(music_id)
+        self.working = False
+        self.done = True
 
 class StoryPlayer:
     """
