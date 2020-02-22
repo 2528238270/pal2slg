@@ -787,33 +787,23 @@ class FightManager:
         self.single_attack_animation = True
         t_fight_data = [
             {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
             {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
             {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            #
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            #
-            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            #
-            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
-            # {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            # {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
+            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+            {"is_enemy": False, "type": "attack", "damage": 400},
         ]
         self.fight_player.start(1, 2, t_fight_data)
 

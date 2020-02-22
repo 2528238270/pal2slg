@@ -75,9 +75,7 @@ class PalAnimationFactory:
         """
 
         def inner(frame):
-            # TODO:这里应该建立缓存，每次加载音效太慢了
-            sound = pygame.mixer.Sound(f'./resource/sound/{sound_id}.wav')
             if frame == target_frame:
-                sound.play()
+                g.audio_player.play_sound(sound_id)
 
         return inner

@@ -3,6 +3,7 @@ import json
 
 import pygame
 
+from code.audio import AudioPlayer
 from code.engine.animation import Animator, Fade
 from code.engine.scene import SceneManager
 from code.engine.sprite import Sprite, draw_rect_text
@@ -55,8 +56,9 @@ class Game:
         g.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
         g.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
         g.sm_walk = pygame.image.load('./resource/PicLib/all_char/0.png').convert_alpha()
-        pygame.mixer.music.load('./resource/music/login.mp3')
-        pygame.mixer.music.play(-1)
+        # pygame.mixer.music.load('./resource/music/login.mp3')
+        # pygame.mixer.music.play(-1)
+
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
         with open('./resource/skill.json', mode='r', encoding='utf8') as file:
@@ -67,26 +69,14 @@ class Game:
         g.animator = Animator(self.screen)
         g.fade = Fade(self.screen)
         g.talk_mgr = TalkManager(self.screen)
+        g.audio_player = AudioPlayer()
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
         # g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
         # g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
         # g.scene_id = ENUM_SCENE.GAME_SCENE
         g.scene_id = ENUM_SCENE.START_SCENE
         g.talk_mgr.start(0)
-        # g.game_map = GameMap()
-        # g.game_map.load(1)
-        # g.game_map.enter_point.debug_show()
-        # g.battle_data['teammates'] = [
-        #     Fighter(1, 1, '沈欺霜', 1, [999, 999], 1000, 10, 10000, 8000, 0, 0),
-        #     Fighter(2, 1, '王小虎', 2, [999, 999], 1500, 10, 10000, 2000, 0, 0, 1),
-        #     Fighter(0, 1, '苏媚', 3, [999, 999], 1500, 10, 10000, 2000, 0, 0, 4),
-        #     Fighter(4, 1, '李忆如', 4, [999, 999], 800, 10, 10000, 2000, 0, 0, 4),
-        # ]
-        # g.battle_data['enemies'] = [
-        #     Fighter(1, 2, '千叶禅师', 1, [99999, 99999], 40, 1, 10000, 2000, 0, 0),
-        #     Fighter(2, 2, '喻南松', 1, [20000, 20000], 20, 1, 10000, 2000, 0, 0),
-        # ]
-        # g.fight_mgr.start(g.battle_data['teammates'], g.battle_data['enemies'])
+        g.audio_player.play_music('login', -1)
 
     def update(self):
         while True:
