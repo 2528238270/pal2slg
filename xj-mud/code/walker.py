@@ -25,6 +25,7 @@ class Walker:
         self.my = my
         self.x = mx * 16
         self.y = my * 16
+        self.walker_id = walker_id
         # 根据walker_id获取不同的cell_w,cell_h的参数
         self.cell_w = self.config[walker_id][0]
         self.cell_h = self.config[walker_id][1]

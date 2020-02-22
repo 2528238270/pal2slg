@@ -84,6 +84,13 @@ class Fighter(Walker):
         self.max_dead_dy = 80  # 最大死亡偏移量
         self.current_surface = None  # idle状态下的图片
         self.visible = True  # 是否可见
+        # TODO:这里应该读取配置文件
+        t = {
+            0: 1,  # 苏媚
+            1: None,  # 黑鬼
+            2: 2,  # 光头
+        }
+        self.fighter_id = t[int(walker_id)]
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
                  move_times=None):
@@ -363,11 +370,30 @@ class Fighter(Walker):
             big_y = int((point[1] - 1) / 3)
             Sprite.blit(g.screen, g.magic_len_cell_img, map_x + big_x * 48 + 2, map_y + big_y * 48 + 2)
 
-    def do_attack(self, fight_mgr):
+    def do_attack(self, fight_mgr, target):
         """
         攻击
         """
-        pass
+        # 计算伤害
+        damage = self.attack_damage(target)
+        fight_data = []
+        fight_data.append({"is_enemy": self.is_enemy, "type": "attack", "damage": damage})
+        fight_mgr.single_attack_animation = True
+        if not self.is_enemy:
+            fight_mgr.fight_player.start(self.fighter_id, target.fighter_id, fight_data)
+        else:
+            fight_mgr.fight_player.start(target.fighter_id, self.fighter_id, fight_data)
+
+    def attack_damage(self, target):
+        """攻击伤害计算"""
+        # TODO:这里要算上暴击和闪避
+        damage = self.atk
+        damage += random.randint(-damage / 10, damage / 10)
+        if damage <= target.defense:
+            damage = random.randint(1, 10)  # 伤害小于对方防御力时，伤害为1~10
+        else:
+            damage = damage - target.defense
+        return int(damage)
 
 
 class FightMenu:
@@ -434,6 +460,7 @@ class FightMenu:
             return
         if self.fight_mgr.current_fighter.show_walk_cell:
             self.fight_mgr.current_fighter.show_walk_cell = False
+            self.fight_mgr.select_skill_target = False
         else:
             self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
 
@@ -456,6 +483,7 @@ class FightMenu:
         print("进来了")
         if self.fight_mgr.current_fighter.show_attack_range:
             self.fight_mgr.current_fighter.show_attack_range = False
+            self.fight_mgr.select_attack_target = False
             return
         # 如果正在选择仙术，那么不能使用攻击
         if self.fight_mgr.select_skill_target:
@@ -784,28 +812,28 @@ class FightManager:
         self.single_attack_animation = False
         # 战斗播放器
         self.fight_player = FightPlayer(self, 2)
-        self.single_attack_animation = True
-        t_fight_data = [
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-            {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-            {"is_enemy": False, "type": "attack", "damage": 400},
-        ]
-        self.fight_player.start(1, 2, t_fight_data)
+        # self.single_attack_animation = True
+        # t_fight_data = [
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
+        #     {"is_enemy": False, "type": "attack", "damage": 400},
+        # ]
+        # self.fight_player.start(1, 2, t_fight_data)
 
     def start(self, fighter_list, map_id):
         """
@@ -822,6 +850,9 @@ class FightManager:
         if self.single_attack_animation:
             # 单体攻击动画播放逻辑
             self.fight_player.logic()
+            if self.fight_player.done:
+                # TODO:单体战斗结束触发相应的特效
+                self.single_attack_animation = False
             return
         self.fight_menu.logic()
         # 渲染排序，显示正确的层级
@@ -878,6 +909,8 @@ class FightManager:
         self.magic_plane.render()
 
     def mouse_down(self, x, y, pressed):
+        mx = int((x - self.fight_map.x) / 48) * 3 + 1
+        my = int((y - self.fight_map.y) / 48) * 3 + 1
         if self.single_attack_animation:
             # TODO:单体攻击动画没有任何事件
             return
@@ -908,7 +941,13 @@ class FightManager:
             return
         # 攻击
         if self.select_attack_target:
-            self.current_fighter.do_attack(self)
+            fighter = self.get_point_fighter(mx, my)
+            if fighter is not None and fighter.is_enemy:
+                print("开始单体战斗")
+                # 超出距离无法攻击
+                if abs(self.current_fighter.mx - fighter.mx) + abs(self.current_fighter.my - fighter.my) != 3:  # 3小格
+                    return
+                self.current_fighter.do_attack(self, fighter)
             return
         # 地图拖动
         self.is_down = True
@@ -998,6 +1037,14 @@ class FightManager:
                 if 0 < (self.mouse_mx + dx) * 3 < self.fight_map.w and 0 < (self.mouse_my + dy) * 3 < self.fight_map.h:
                     Sprite.blit(g.screen, g.magic_len_cell_img, self.fight_map.x + (self.mouse_mx + dx) * 48 + 2,
                                 self.fight_map.y + (self.mouse_my + dy) * 48 + 2)
+
+    def get_point_fighter(self, mx, my):
+        """
+        获取指定位置的对象
+        """
+        for fighter in self.fighter_list:
+            if fighter.mx == mx and fighter.my == my:
+                return fighter
 
     @staticmethod
     def calc_range(length, big_x, big_y, fight_map):
@@ -1205,13 +1252,12 @@ class FighterAnimation:
             # 触发移动事件
             if move_frame is not None and len(move_frame) == 2:
                 if frame == move_frame[0][0]:
-                    # TODO:向敌人移动
+                    # 向敌人移动
                     total_frame = move_frame[0][1] - move_frame[0][0] + 1
                     self.single_frame_length = 250 / total_frame
                     self.move_forward = True
-                    print("向敌人移动")
                 if frame == move_frame[1][0]:
-                    # TODO:回到自己的位置
+                    # 回到自己的位置
                     total_frame = move_frame[1][1] - move_frame[1][0] + 1
                     self.single_frame_length = 250 / total_frame
                     self.move_back = True
@@ -1371,7 +1417,7 @@ class FighterAnimation:
     def magic(self, damage):
         self.damage = damage
         self.state = 2
-        self.magic_count=0
+        self.magic_count = 0
         print(self.is_enemy, "施法开始")
 
     def attack(self, damage):
@@ -1404,6 +1450,9 @@ class FightPlayer:
         self.fight_data = None
         self.cur_data = None  # 当前数据
         self.count = 0
+        self.done = False  # 是否执行完成
+        self.fade_done = False  # 是否开始退出战斗播放器
+        self.fade_done_count = 0
 
     def start(self, teammate_id, enemy_id, fight_data):
         """
@@ -1422,7 +1471,10 @@ class FightPlayer:
                     e_magic = d['magic_id']
                 else:
                     t_magic = d['magic_id']
-
+        self.done = False
+        self.fade_done = False
+        self.fade_done_count = 0
+        self.count = 0
         self.teammate = FighterAnimation(teammate_id, self, False, t_magic)
         self.enemy = FighterAnimation(enemy_id, self, True, e_magic)
         self.fight_data = fight_data
@@ -1431,12 +1483,17 @@ class FightPlayer:
         self.teammate.logic()
         self.enemy.logic()
         self.count += 1
-        if self.count == g.fps * 2:
-            # 闲置2秒后开始战斗
+        if self.count == g.fps * 1:
+            # 闲置1秒后开始战斗
             self.cur_data = self.fight_data.pop(0)
             self.action()
             return
-
+        if self.fade_done:
+            self.fade_done_count += 1
+            if self.fade_done_count == g.fps * 2:
+                # TODO:战斗结束
+                self.done = True
+                return
         # 战斗逻辑
         if self.cur_data is None:
             return
@@ -1444,7 +1501,8 @@ class FightPlayer:
         if cur_fighter.action_done:
             cur_fighter.action_done = False  # 这里复原，以便重复使用
             if len(self.fight_data) == 0:
-                return  # TODO:战斗结束
+                self.fade_done = True
+                return
             self.cur_data = self.fight_data.pop(0)
             print(self.cur_data)
             self.action()
