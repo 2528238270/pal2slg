@@ -30,5 +30,13 @@
     "dir": "left",
     "event": -1,
     "event_args": null
+  },
+  {
+    "name": "千叶禅师",
+    "text": "今天我定要讨个说法！",
+    "face": "37-2",
+    "dir": "right",
+    "event": -1,
+    "event_args": null
   }
 ]

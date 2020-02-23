@@ -4,6 +4,7 @@ create by 狡猾的皮球
 qq:871245007
 2020年2月13日 15:43:34
 """
+from code.fight import Fighter, Magic
 from code.game_global import g
 from code.npc import Npc
 
@@ -204,6 +205,29 @@ class Command:
         g.audio_player.play_music(music_id)
         self.working = False
         self.done = True
+
+    def start_fight_t(self, *args):
+        """
+        开始测试战斗
+        """
+        fighter = Fighter(0, 10, 10, 3)
+        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10, 10, 3)
+        fighter.set_name('苏媚')
+        fighter.set_skill([Magic(1), Magic(2), ])
+
+        fighter_dgt = Fighter(4, 15, 10, 2, True)
+        fighter_dgt.set_attr([30000, 30000], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt.set_name('千叶禅师')
+
+        fighter_dgt3 = Fighter(2, 18, 10, 2, True)
+        fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt3.set_name('大光头吴涛')
+
+        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3], 1)
+        g.audio_player.play_music(5013)
+        self.working = False
+        self.done = True
+
 
 class StoryPlayer:
     """

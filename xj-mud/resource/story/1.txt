@@ -31,5 +31,9 @@ delay 1
 # 显示大光头和他爸爸
 show_npc 4,35,30,2
 show_npc 2,37,30,2
+# 改成紧张刺激的bgm
 play_music Xian015
+# 开始哔哔
 start_talk 2004
+# 开始测试战斗战斗
+start_fight_t 0

@@ -4,3 +4,5 @@ xj-mud/code/__pycache__/
 asyncio_test/.idea/
 h5/.idea/
 xj-mud.rar
+*.rar
+运行方式.txt

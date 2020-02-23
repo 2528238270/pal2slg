@@ -18,6 +18,24 @@
     "cell_w": 640,
     "cell_h": 480
   },
-  "attack_ani": null,
-  "attack_extra_ani":null
+  "attack_ani": {
+    "id": "1",
+    "time": 2000,
+    "frame_range": [0,20],
+    "sound_frame": [
+      ["1", 15]
+    ],
+    "attack_frame": [8,10],
+    "move_frame": [[8,7],[10,12]],
+    "extra_frame": [10,15],
+    "cell_w": 66,
+    "cell_h": 66
+  },
+  "attack_extra_ani":{
+    "id": 1,
+    "time": 2000,
+    "frame_range": [0,20],
+    "cell_w": 66,
+    "cell_h": 66
+  }
 }

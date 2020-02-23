@@ -89,6 +89,7 @@ class Fighter(Walker):
             0: 1,  # 苏媚
             1: None,  # 黑鬼
             2: 2,  # 光头
+            4: 3,  # 千叶禅师
         }
         self.fighter_id = t[int(walker_id)]
 
@@ -378,6 +379,10 @@ class Fighter(Walker):
         damage = self.attack_damage(target)
         fight_data = []
         fight_data.append({"is_enemy": self.is_enemy, "type": "attack", "damage": damage})
+        # TODO:测试代码，记得删除
+        fight_data.append({"is_enemy": True, "type": "magic", "magic_id": "1", "damage": 300})
+        fight_data.append({"is_enemy": False, "type": "magic", "magic_id": "1", "damage": 666})
+
         fight_mgr.single_attack_animation = True
         if not self.is_enemy:
             fight_mgr.fight_player.start(self.fighter_id, target.fighter_id, fight_data)
@@ -1173,21 +1178,23 @@ class FighterAnimation:
                                            frame_callback=self.fighter_magic_cb(sound_frame, release_magic_frame),
                                            done_callback=self.fighter_magic_done_cb)
         # 创建人物攻击动画
-        ani_id = cfg['attack_ani']['id']
-        dw = cfg['attack_ani']['cell_w']
-        dh = cfg['attack_ani']['cell_h']
-        time = cfg['attack_ani']['time']
-        frame_range = cfg['attack_ani']['frame_range']
-        sound_frame = cfg['attack_ani']['sound_frame']
-        extra_frame = cfg['attack_ani']['extra_frame']
-        attack_frame = cfg['attack_ani']['attack_frame']
-        move_frame = cfg['attack_ani']['move_frame']
+        if cfg['attack_ani'] is not None:
+            ani_id = cfg['attack_ani']['id']
+            dw = cfg['attack_ani']['cell_w']
+            dh = cfg['attack_ani']['cell_h']
+            time = cfg['attack_ani']['time']
+            frame_range = cfg['attack_ani']['frame_range']
+            sound_frame = cfg['attack_ani']['sound_frame']
+            extra_frame = cfg['attack_ani']['extra_frame']
+            attack_frame = cfg['attack_ani']['attack_frame']
+            move_frame = cfg['attack_ani']['move_frame']
 
-        ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
-        self.attack_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, False, frame_range,
-                                    fps=g.fps,
-                                    frame_callback=self.attack_cb(sound_frame, attack_frame, extra_frame, move_frame),
-                                    done_callback=self.attack_done_cb)
+            ani_img = pygame.image.load(f'./resource/animation/{ani_id}.png').convert_alpha()
+            self.attack_ani = Animation(self.fighter_x, self.fighter_y, ani_img, dw, dh, time, False, frame_range,
+                                        fps=g.fps,
+                                        frame_callback=self.attack_cb(sound_frame, attack_frame, extra_frame,
+                                                                      move_frame),
+                                        done_callback=self.attack_done_cb)
         # 创建攻击额外动画
         if cfg['attack_extra_ani'] is None:
             return
