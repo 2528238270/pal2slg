@@ -68,6 +68,7 @@ class Fighter(Walker):
         self.combo_count = 0  # 本回合连击数
         self.move_times = None  # 每回合可以移动的次数
         self.move_count = 0  # 本回合移动次数
+        self.attack_count = 0  # 攻击次数
         self.name = None  # 姓名
         self.is_enemy = is_enemy  # 是否为敌人
         self.show_walk_cell = False  # 是否显示可行走格子
@@ -190,7 +191,7 @@ class Fighter(Walker):
         """
         施法
         """
-        if self.skill_count > 0:
+        if self.skill_count > 0 or self.attack_count>0:
             return
         # 小格子
         mx = fight_mgr.mouse_mx * 3 + 1
@@ -211,7 +212,7 @@ class Fighter(Walker):
         fighters = fight_mgr.get_range_fighters(cell_list, fight_mgr)
         self.skill_effect(self.current_skill, fighters, ani)
         # TODO:记得打开这里
-        # self.skill_count += 1
+        self.skill_count += 1
 
     def skill_effect(self, skill, fighters, ani):
         """
@@ -385,6 +386,8 @@ class Fighter(Walker):
         """
         普通攻击
         """
+        if self.skill_count > 0 or self.attack_count>0:
+            return
         # 计算伤害
         fight_data = list()
         for i in range(self.combo):
@@ -408,6 +411,7 @@ class Fighter(Walker):
             fight_mgr.fight_player.start(target.fighter_id, self.fighter_id, fight_data)
         # TODO:开启单体动画开关，这里可以触发Fade
         fight_mgr.single_attack_animation = True
+        self.attack_count += 1
 
     def attack_damage(self, target):
         """攻击伤害计算"""
@@ -524,9 +528,13 @@ class FightMenu:
             self.fight_mgr.current_fighter.show_walk_cell = False
             self.fight_mgr.select_skill_target = False
         else:
+            if self.fight_mgr.current_fighter.move_count >= self.fight_mgr.current_fighter.move_times:
+                return
             self.fight_mgr.current_fighter.open_walk_cell(self.fight_mgr.fight_map)
 
     def magic_click(self):
+        if self.fight_mgr.current_fighter.skill_count > 0 or self.fight_mgr.current_fighter.attack_count>0:
+            return
         # 如果正在移动，那么不能使用仙术功能
         if self.fight_mgr.current_fighter.show_walk_cell:
             return
@@ -542,7 +550,8 @@ class FightMenu:
         """
         攻击按钮单击事件
         """
-        print("进来了")
+        if self.fight_mgr.current_fighter.skill_count > 0 or self.fight_mgr.current_fighter.attack_count>0:
+            return
         if self.fight_mgr.current_fighter.show_attack_range:
             self.fight_mgr.current_fighter.show_attack_range = False
             self.fight_mgr.select_attack_target = False
@@ -884,28 +893,6 @@ class FightManager:
         self.single_attack_animation = False
         # 战斗播放器
         self.fight_player = FightPlayer(self, 2)
-        # self.single_attack_animation = True
-        # t_fight_data = [
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": True, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        #     {"is_enemy": False, "type": "magic", "magic_id": 1, "damage": 200},
-        #     {"is_enemy": False, "type": "attack", "damage": 400},
-        # ]
-        # self.fight_player.start(1, 2, t_fight_data)
 
     def start(self, fighter_list, map_id):
         """

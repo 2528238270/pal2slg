@@ -216,7 +216,7 @@ class Command:
         fighter.set_skill([Magic(1), Magic(2), ])
 
         fighter_bt = Fighter(0, 10, 11, 3)
-        fighter_bt.set_attr([100, 100], [100, 100], 2000, 10, 10, 4, 10000, 4, 3, 1)
+        fighter_bt.set_attr([100, 100], [100, 100], 2000, 2000, 10, 4, 10000, 4, 3, 1)
         fighter_bt.set_name('变态苏媚')
         fighter_bt.set_skill([Magic(1)])
 
