@@ -563,6 +563,13 @@ class FighterInfoPlane:
         self.fight_info_img = pygame.image.load('./resource/PicLib/all_sys/fight_info_bg.png').convert_alpha()
         self.switch = False
         self.fighter = None
+        self.five_map = {
+            1: ['雷', (128, 0, 128)],
+            2: ['风', (128, 128, 128)],
+            3: ['水', (0, 128, 255)],
+            4: ['火', (255, 0, 0)],
+            5: ['土', (128, 64, 0)]
+        }
 
     def show(self, fighter):
         self.fighter = fighter
@@ -597,6 +604,9 @@ class FighterInfoPlane:
         draw_src_outline_text(g.screen, 170, 396,
                               "剩余移动次数  {}".format(self.fighter.move_times - self.fighter.move_count), g.fnt_talk,
                               (0, 255, 0), (0, 0, 0))
+        draw_src_outline_text(g.screen, 170, 414, "五行  ", g.fnt_talk, (0, 255, 0), (0, 0, 0))
+        draw_src_outline_text(g.screen, 170, 414, "        {}".format(self.five_map[self.fighter.five_elements][0]),
+                              g.fnt_talk, self.five_map[self.fighter.five_elements][1], (0, 0, 0))
 
 
 class Magic:
@@ -966,6 +976,10 @@ class FightManager:
         # 画伤害
         for damage in self.damage_list:
             damage.render()
+        # 画光标位置
+        pygame.draw.rect(g.screen, (0, 255, 0),
+                         (self.fight_map.x + self.mouse_mx * 48 + 2, self.fight_map.y + self.mouse_my * 48 + 2, 48 - 4,
+                          48 - 4), 1)
         self.fight_menu.render()
         self.info_plane.render()
         self.magic_plane.render()

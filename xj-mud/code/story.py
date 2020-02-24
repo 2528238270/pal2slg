@@ -215,6 +215,11 @@ class Command:
         fighter.set_name('苏媚')
         fighter.set_skill([Magic(1), Magic(2), ])
 
+        fighter_bt = Fighter(0, 10, 11, 3)
+        fighter_bt.set_attr([100, 100], [100, 100], 2000, 10, 10, 4, 10000, 4, 3, 1)
+        fighter_bt.set_name('变态苏媚')
+        fighter_bt.set_skill([Magic(1)])
+
         fighter_dgt = Fighter(4, 15, 10, 2, True)
         fighter_dgt.set_attr([30000, 30000], [100, 100], 10, 10, 10, 1, 10, 10, 2, 4)
         fighter_dgt.set_name('千叶禅师')
@@ -223,7 +228,7 @@ class Command:
         fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2, 5)
         fighter_dgt3.set_name('大光头吴涛')
 
-        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3], 1)
+        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3,fighter_bt], 1)
         g.audio_player.play_music(5013)
         self.working = False
         self.done = True
