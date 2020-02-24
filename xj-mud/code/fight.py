@@ -63,6 +63,7 @@ class Fighter(Walker):
         self.defense = None  # 防御力
         self.agi = None  # 身法
         self.luk = None  # 吉运
+        self.five_elements = None  # 五行 1雷 2风 3水 4火 5土
         self.combo = None  # 连击数
         self.combo_count = 0  # 本回合连击数
         self.move_times = None  # 每回合可以移动的次数
@@ -94,7 +95,7 @@ class Fighter(Walker):
         self.fighter_id = t[int(walker_id)]
 
     def set_attr(self, hp=None, mp=None, atk=None, magic=None, defense=None, agi=None, luk=None, combo=None,
-                 move_times=None):
+                 move_times=None, five_elements=None):
         """
         设置属性
         """
@@ -107,6 +108,7 @@ class Fighter(Walker):
         self.luk = luk or self.luk  # 吉运
         self.combo = combo or self.combo  # 连击数
         self.move_times = move_times or self.move_times  # 每回合可以移动的次数
+        self.five_elements = five_elements or self.five_elements  # 五行 1雷 2风 3水 4火 5土
 
     def set_name(self, name):
         """
@@ -255,6 +257,14 @@ class Fighter(Walker):
             damage = random.randint(1, 10)  # 伤害小于对方防御力时，伤害为1~10
         else:
             damage = damage - target.defense
+
+        # 五行克制
+        relation = Fighter.five_elements_relation(self.five_elements, target.five_elements)
+        if relation == 1:
+            damage *= 1.25
+        elif relation == 2:
+            damage *= 0.75
+
         return int(damage)
 
     def move_fighter(self, mx, my, fight_map, fighter_list):
@@ -373,32 +383,79 @@ class Fighter(Walker):
 
     def do_attack(self, fight_mgr, target):
         """
-        攻击
+        普通攻击
         """
         # 计算伤害
-        damage = self.attack_damage(target)
-        fight_data = []
-        fight_data.append({"is_enemy": self.is_enemy, "type": "attack", "damage": damage})
-        # TODO:测试代码，记得删除
-        fight_data.append({"is_enemy": True, "type": "magic", "magic_id": "1", "damage": 300})
-        fight_data.append({"is_enemy": False, "type": "magic", "magic_id": "1", "damage": 666})
+        fight_data = list()
+        for i in range(self.combo):
+            damage, cri = self.attack_damage(target)
+            fight_data.append({"is_enemy": self.is_enemy, "type": "attack", "damage": damage, "cri": cri})
+            target.hp[0] -= damage
+            if target.hp[0] <= 0:
+                target.hp[0] = 0
+                break
+        # 敌人反击
+        if target.hp[0] > 0:
+            damage, cri = target.attack_damage(self)
+            fight_data.append({"is_enemy": target.is_enemy, "type": "attack", "damage": damage, "cri": cri})
+            self.hp[0] -= damage
+            if self.hp[0] <= 0:
+                self.hp[0] = 0
 
-        fight_mgr.single_attack_animation = True
         if not self.is_enemy:
             fight_mgr.fight_player.start(self.fighter_id, target.fighter_id, fight_data)
         else:
             fight_mgr.fight_player.start(target.fighter_id, self.fighter_id, fight_data)
+        # TODO:开启单体动画开关，这里可以触发Fade
+        fight_mgr.single_attack_animation = True
 
     def attack_damage(self, target):
         """攻击伤害计算"""
-        # TODO:这里要算上暴击和闪避
+        # 暴击率=吉运/10000
+        if self.luk >= random.randint(1, 10000):
+            cri = True
+        else:
+            cri = False
+
         damage = self.atk
         damage += random.randint(-damage / 10, damage / 10)
         if damage <= target.defense:
             damage = random.randint(1, 10)  # 伤害小于对方防御力时，伤害为1~10
         else:
             damage = damage - target.defense
-        return int(damage)
+
+        # 五行克制
+        relation = Fighter.five_elements_relation(self.five_elements, target.five_elements)
+        if relation == 1:
+            damage *= 1.25
+        elif relation == 2:
+            damage *= 0.75
+        # 暴击
+        if cri:
+            damage *= 2
+
+        return int(damage), cri
+
+    @staticmethod
+    def five_elements_relation(element1, element2):
+        """
+        五行 1雷 2风 3水 4火 5土
+        雷克土、风克雷、水克火、火克风、土克水
+        五行相生相克关系，返回1就是克制，返回2就是被克 返回0是正常
+        """
+        relation_map = {
+            1: 5,
+            2: 1,
+            3: 4,
+            4: 2,
+            5: 3
+        }
+        if relation_map[element1] == element2:
+            return 1
+        elif relation_map[element2] == element1:
+            return 2
+        else:
+            return 0
 
 
 class FightMenu:
@@ -1137,6 +1194,7 @@ class FighterAnimation:
         self.move_back = False  # 是否向自己位置移动
         self.single_frame_length = 0  # 每帧移动
         self.magic_count = 0  # 法术结束+1 施法动作结束+1
+        self.cri = False  # 当前是否暴击
         if self.is_enemy:
             self.fighter_x = 200
             self.fighter_y = 150
@@ -1247,7 +1305,10 @@ class FighterAnimation:
                 other = self.fight_player.get_other(self)
                 other.state = 1
                 # 攻击帧，出现伤害
-                g.fight_mgr.damage_list.append(DamageAnimation('attack', self.damage, self.other_x, self.other_y))
+                t = 'attack'
+                if self.cri:
+                    t = 'cri'
+                g.fight_mgr.damage_list.append(DamageAnimation(t, self.damage, self.other_x, self.other_y))
             elif frame == attack_frame[1]:
                 # 敌人状态还原
                 other = self.fight_player.get_other(self)
@@ -1276,7 +1337,6 @@ class FighterAnimation:
         普通攻击完成回调
         """
         self.state = 0  # 还原为闲置状态
-        print(self.is_enemy, '普通攻击', '重置idle')
         self.attack_ani.reset()
         self.move_back = False
         self.move_forward = False
@@ -1306,7 +1366,6 @@ class FighterAnimation:
         return cb
 
     def fighter_magic_done_cb(self, frame):
-        print('施法动作结束')
         self.magic_count += 1
         self.state = 0
         if self.magic_count == 2:
@@ -1339,7 +1398,6 @@ class FighterAnimation:
         return cb
 
     def magic_cb_done(self, frame):
-        print('法术结束')
         self.magic_count += 1
         if self.magic_count == 2:
             self.action_done = True
@@ -1352,7 +1410,6 @@ class FighterAnimation:
             self.idle_ani.update()
         elif self.state == 2:
             self.fighter_magic_ani.update()
-            # print("施法逻辑")
         elif self.state == 3:  # 攻击动画
             self.attack_ani.update()
             if self.move_forward:
@@ -1425,11 +1482,11 @@ class FighterAnimation:
         self.damage = damage
         self.state = 2
         self.magic_count = 0
-        print(self.is_enemy, "施法开始")
 
-    def attack(self, damage):
+    def attack(self, damage, cri):
         self.damage = damage
         self.state = 3
+        self.cri = cri
 
 
 class FightPlayer:
@@ -1478,10 +1535,10 @@ class FightPlayer:
                     e_magic = d['magic_id']
                 else:
                     t_magic = d['magic_id']
-        self.done = False
-        self.fade_done = False
+        self.done = False  # 战斗是否完成
+        self.fade_done = False  # 战斗打完要等待一段时间才能完成
         self.fade_done_count = 0
-        self.count = 0
+        self.count = 0  # 战斗开始要等待一段时间才出招
         self.teammate = FighterAnimation(teammate_id, self, False, t_magic)
         self.enemy = FighterAnimation(enemy_id, self, True, e_magic)
         self.fight_data = fight_data
@@ -1499,6 +1556,9 @@ class FightPlayer:
             self.fade_done_count += 1
             if self.fade_done_count == g.fps * 2:
                 # TODO:战斗结束
+                for fighter in self.fight_mgr.fighter_list:
+                    if fighter.hp[0] <= 0:
+                        fighter.set_dead()
                 self.done = True
                 return
         # 战斗逻辑
@@ -1511,7 +1571,6 @@ class FightPlayer:
                 self.fade_done = True
                 return
             self.cur_data = self.fight_data.pop(0)
-            print(self.cur_data)
             self.action()
 
     def action(self):
@@ -1520,10 +1579,9 @@ class FightPlayer:
         """
         cur_fighter = self.enemy if self.cur_data['is_enemy'] else self.teammate
         if self.cur_data['type'] == 'magic':
-            print("魔法")
             cur_fighter.magic(self.cur_data['damage'])
         elif self.cur_data['type'] == 'attack':
-            cur_fighter.attack(self.cur_data['damage'])
+            cur_fighter.attack(self.cur_data['damage'], self.cur_data['cri'])
 
     def render(self):
         Sprite.blit(g.screen, self.bg, 0, 0)

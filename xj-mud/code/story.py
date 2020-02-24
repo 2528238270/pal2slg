@@ -211,16 +211,16 @@ class Command:
         开始测试战斗
         """
         fighter = Fighter(0, 10, 10, 3)
-        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10, 10, 3)
+        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10000, 4, 3, 1)
         fighter.set_name('苏媚')
         fighter.set_skill([Magic(1), Magic(2), ])
 
         fighter_dgt = Fighter(4, 15, 10, 2, True)
-        fighter_dgt.set_attr([30000, 30000], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt.set_attr([30000, 30000], [100, 100], 10, 10, 10, 1, 10, 10, 2, 4)
         fighter_dgt.set_name('千叶禅师')
 
         fighter_dgt3 = Fighter(2, 18, 10, 2, True)
-        fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
+        fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2, 5)
         fighter_dgt3.set_name('大光头吴涛')
 
         g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3], 1)
