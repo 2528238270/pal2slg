@@ -69,9 +69,14 @@ class Button:
     def mouse_down(self, x, y):
         if self.colli(x, y):
             self.status = Button.DOWN
+            return True
+        else:
+            return False
 
     def mouse_up(self):
         if self.status == Button.DOWN:  # 如果按钮的当前状态是按下状态,才继续执行下面的代码
             self.status = Button.NORMAL  # 按钮弹起,所以还原成普通状态
             if self.callBackFunc:  # 调用回调函数
-                return self.callBackFunc()
+                self.callBackFunc()
+            return True
+        return False

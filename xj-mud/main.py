@@ -41,6 +41,7 @@ class Game:
         g.fps = self.fps  # 设置fps
         # 加载所需资源
         g.fnt_hp = pygame.font.Font('./resource/font/font1.TTF', 16)
+        g.fnt_fight_name = pygame.font.Font('./resource/font/font1.TTF', 18)
         g.fnt_battle_name = pygame.font.Font('./resource/font/font1.TTF', 24)
         g.fnt_magic_plane = pygame.font.SysFont('microsoftyaheimicrosoftyaheiui', 20)
         g.fnt_magic_plane.set_bold(True)
