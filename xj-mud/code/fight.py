@@ -504,8 +504,8 @@ class FightMenu:
             btn.draw(self.surface)
 
         # 画个名字
-        draw_outline_text(g.screen, self.x+50, self.y+280, self.fight_mgr.current_fighter.name, g.fnt_fight_name,
-                              (255, 255, 255), (255, 127, 39))
+        draw_outline_text(g.screen, self.x + 50, self.y + 280, self.fight_mgr.current_fighter.name, g.fnt_fight_name,
+                          (255, 255, 255), (255, 127, 39))
 
     def mouse_down(self, x, y):
         for btn in self.btn_list:
@@ -870,8 +870,9 @@ class FightManager:
         self.magic_len_cell_img = pygame.image.load('./resource/PicLib/all_sys/magic_len_cell.png').convert_alpha()
         self.btn_end_1_img = pygame.image.load('./resource/PicLib/all_sys/btn_end_1.png').convert_alpha()
         self.btn_end_2_img = pygame.image.load('./resource/PicLib/all_sys/btn_end_2.png').convert_alpha()
-        self.btn_end = Button(640-87, 480-33, "", self.btn_end_1_img, self.btn_end_2_img)  # 回合结束按钮
-
+        self.btn_end = Button(640 - 87, 480 - 33, "", self.btn_end_1_img, self.btn_end_2_img,
+                              callBackFunc=self.end_round_cb)  # 回合结束按钮
+        self.enemy_action = False  # 敌人是否正在行动
         g.move_cell_img = self.move_cell_img
         g.magic_len_cell_img = self.magic_len_cell_img
 
@@ -982,6 +983,8 @@ class FightManager:
     def mouse_down(self, x, y, pressed):
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
+        if self.enemy_action:
+            return
         if self.single_attack_animation:
             # TODO:单体攻击动画没有任何事件
             return
@@ -1069,6 +1072,8 @@ class FightManager:
         # 小格子
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
+        if self.enemy_action:
+            return
         if self.single_attack_animation:
             # TODO:单体攻击动画没有任何事件
             return
@@ -1124,6 +1129,26 @@ class FightManager:
         for fighter in self.fighter_list:
             if fighter.mx == mx and fighter.my == my:
                 return fighter
+
+    def end_round_cb(self):
+        """
+        结束回合按钮的回调
+        """
+        if self.single_attack_animation:
+            return
+        # 重置所有友方人物行动计数
+        for fighter in self.fighter_list:
+            if fighter.is_enemy:
+                continue
+            fighter.attack_count = 0
+            fighter.skill_count = 0
+            fighter.move_count = 0
+        # 关闭所有面板
+        self.select_skill_target = False
+        self.select_attack_target = False
+        self.fight_menu.switch = False
+        self.current_fighter = None
+        # TODO:设置战斗状态为敌人行动状态，所有玩家操作被禁止
 
     @staticmethod
     def calc_range(length, big_x, big_y, fight_map):

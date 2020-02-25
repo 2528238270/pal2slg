@@ -220,7 +220,7 @@ class Command:
         fighter_bt.set_name('变态苏媚')
         fighter_bt.set_skill([Magic(1)])
 
-        fighter_dgt = Fighter(4, 15, 10, 2, True)
+        fighter_dgt = Fighter(4, 17, 10, 2, True)
         fighter_dgt.set_attr([30000, 30000], [100, 100], 10, 10, 10, 1, 10, 10, 2, 4)
         fighter_dgt.set_name('千叶禅师')
 
