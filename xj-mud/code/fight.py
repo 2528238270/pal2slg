@@ -227,7 +227,8 @@ class Fighter(Walker):
         # 施法的动画处理
         ani = g.ani_factory.create(skill.magic_info['ani_id'],
                                    mx * 16 + fight_mgr.fight_map.x - 8,
-                                   my * 16 + fight_mgr.fight_map.y - 8, FightAnimation, done_callback=self.enemy_skill_done,
+                                   my * 16 + fight_mgr.fight_map.y - 8, FightAnimation,
+                                   done_callback=self.enemy_skill_done,
                                    extra={"mx": mx, "my": my, "fight_map": fight_mgr.fight_map})
         # 找到技能内所有目标
         cell_list = fight_mgr.calc_range(skill.magic_info['range'], big_x, big_y, fight_mgr.fight_map)
@@ -333,6 +334,37 @@ class Fighter(Walker):
             if point[0] == mx and point[1] == my:
                 self.find_path(walk_data, [mx, my])
                 return
+
+    def enemy_find_path(self, fight_map, fighter_list, target):
+        """
+        敌人寻路,把目标玩家设置成终点，把其他玩家设置成障碍
+        """
+        walk_data = deepcopy(fight_map.walk_data)
+        for fighter in fighter_list:
+            if fighter is self:
+                continue
+            if fighter is target:
+                continue
+            # 把玩家上下左右斜角设置成障碍（小格子）
+            walk_data[fighter.mx][fighter.my] = 1
+            if fighter.my - 1 >= 0:
+                walk_data[fighter.mx][fighter.my - 1] = 1
+            if fighter.my + 1 < walk_data.h:
+                walk_data[fighter.mx][fighter.my + 1] = 1
+            if fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my] = 1
+            if fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my] = 1
+            if fighter.my - 1 >= 0 and fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my - 1] = 1
+            if fighter.my + 1 < walk_data.h and fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my + 1] = 1
+            if fighter.my + 1 < walk_data.h and fighter.mx - 1 >= 0:
+                walk_data[fighter.mx - 1][fighter.my + 1] = 1
+            if fighter.my - 1 >= 0 and fighter.mx + 1 < walk_data.w:
+                walk_data[fighter.mx + 1][fighter.my - 1] = 1
+        path = AStar(walk_data, [self.mx, self.my], [target.mx, target.my], offset=3).start()
+        return path
 
     def logic(self):
         """
@@ -1251,7 +1283,10 @@ class FightManager:
     def enemy_logic(self):
         """
         敌人逻辑
-        current_enemy_state 0初始状态 1镜头移动中 2移动结束 3移动中 4攻击中 5施法中 6执行完成
+        current_enemy_state
+            0初始状态 1镜头移动中 2移动结束
+            3移动中 4攻击中 5施法中 6执行完成
+            7.行走移动中
         """
         if not self.enemy_action:
             return
@@ -1259,6 +1294,7 @@ class FightManager:
             if len(self.enemy_list) == 0:
                 # 切换回玩家操作
                 self.enemy_action = False
+                self.camera_mgr.unlock()
                 return
             self.current_enemy = self.enemy_list.pop(0)
             self.current_enemy_state = 0
@@ -1293,6 +1329,61 @@ class FightManager:
                 self.current_enemy.enemy_do_attack(fighter)
                 self.current_enemy_state = 4
                 return
+            # 没人在攻击范围内，向玩家靠近
+            if self.current_enemy.move_count >= self.current_enemy.move_times:
+                # 没有移动次数了
+                self.current_enemy = None
+                self.current_enemy_state = 0
+                return
+            self.current_enemy_state = 3
+        elif self.current_enemy_state == 3:
+            # 向玩家靠近
+            # 向所有玩家寻路
+            fighter_path_list = []
+            teammates = []
+            for fighter in self.fighter_list:
+                if not fighter.is_enemy:
+                    teammates.append(fighter)
+            for teammate in teammates:
+                path = self.current_enemy.enemy_find_path(self.fight_map, teammates, teammate)
+                if path is not None:
+                    fighter_path_list.append([teammate, path])
+            # 排序
+            fighter_path_list.sort(key=lambda obj: len(obj[1]))
+            if len(fighter_path_list) == 0:
+                self.current_enemy_state = 6
+                return
+            path = fighter_path_list[0][1]
+            # 去掉最后一个路径点（玩家所在的位置，不能跟玩家站在一起）
+            path = path[:-1]
+            # 获取敌人移动范围
+            big_x, big_y = FightManager.small2big(self.current_enemy.mx, self.current_enemy.my)
+            cell_list = FightManager.calc_range(self.current_enemy.agi, big_x, big_y, self.fight_map)
+            dest_pos = None
+            for pos in path[::-1]:
+                # 注意，不能站在敌人的友方身上
+                for p in cell_list:
+                    if pos.x == p[0] and pos.y == p[1]:
+                        # 判断是否在友方身上
+                        tag = False
+                        for f in self.fighter_list:
+                            if f.is_enemy and f.mx == pos.x and f.my == pos.y:
+                                tag = True
+                                break
+                        if tag:
+                            continue
+                        dest_pos = pos
+                        break
+                else:
+                    continue
+                break
+            for index, pos in enumerate(path):
+                if pos == dest_pos:
+                    path = path[:index + 1]
+                    break
+            self.current_enemy.move_by_path(path)
+            self.current_enemy.move_count+=1
+            self.current_enemy_state = 7
         elif self.current_enemy_state == 4:
             # 攻击结束
             if not self.single_attack_animation:
@@ -1305,8 +1396,16 @@ class FightManager:
             # 行动结束
             self.current_enemy = None
             self.current_enemy_state = 0
+        elif self.current_enemy_state == 7:
+            # 行走移动中
+            if not self.current_enemy.walking:
+                self.current_enemy_state = 2
+                return
 
     def lock_enemy(self, enemy):
+        """
+        镜头锁定敌人
+        """
         self.camera_mgr.lock(enemy)
         self.current_enemy_state = 2
 

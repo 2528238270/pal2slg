@@ -161,6 +161,13 @@ class Walker:
         self.path = path
         self.path_index = 0
 
+    def move_by_path(self, path):
+        """
+        通过已经准备好的路径，直接移动
+        """
+        self.path = path
+        self.path_index = 0
+
     def auto_goto(self):
         """
         自动寻路

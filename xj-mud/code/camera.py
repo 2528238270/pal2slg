@@ -78,17 +78,17 @@ class CameraManager:
             if self.callback:
                 self.callback(*self.args)
 
-    def unlock(self, x, y):
+    def unlock(self, x=None, y=None):
         """
         解除镜头锁定并且直接移动镜头到指定位置
         """
         self.lock_role = False
         self.moving = False
+        if x is None or y is None:
+            return
         map_x, map_y = self.game_map.calc_roll_pos(x*16, y*16)
         self.game_map.x = map_x
         self.game_map.y = map_y
-        print(x, y)
-        print(map_x, map_y)
 
     def lock(self, walker):
         """
