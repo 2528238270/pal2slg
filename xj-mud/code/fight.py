@@ -31,6 +31,7 @@ from copy import deepcopy
 import pygame
 from pygame.surface import Surface
 
+from code.camera import CameraManager
 from code.engine.a_star import AStar
 from code.engine.animation import Animation
 from code.engine.gui import Button
@@ -46,6 +47,7 @@ class FightMap(GameMap):
         初始化战斗地图
         """
         super().__init__()
+        # TODO:这里重复加载了地图背景音乐
 
 
 class Fighter(Walker):
@@ -86,6 +88,7 @@ class Fighter(Walker):
         self.max_dead_dy = 80  # 最大死亡偏移量
         self.current_surface = None  # idle状态下的图片
         self.visible = True  # 是否可见
+        self.enemy_skill_state = 0  # 0未完成 1已完成
         # TODO:这里应该读取配置文件
         t = {
             0: 1,  # 苏媚
@@ -189,7 +192,7 @@ class Fighter(Walker):
 
     def do_skill(self, fight_mgr):
         """
-        施法
+        玩家施法
         """
         if self.skill_count > 0 or self.attack_count > 0:
             return
@@ -214,6 +217,30 @@ class Fighter(Walker):
         # TODO:记得打开这里
         self.skill_count += 1
 
+    def enemy_do_skill(self, skill, mx, my):
+        """
+        敌人施法
+        """
+        self.enemy_skill_state = 0
+        fight_mgr = g.fight_mgr
+        big_x, big_y = FightManager.small2big(mx, my)
+        # 施法的动画处理
+        ani = g.ani_factory.create(skill.magic_info['ani_id'],
+                                   mx * 16 + fight_mgr.fight_map.x - 8,
+                                   my * 16 + fight_mgr.fight_map.y - 8, FightAnimation, done_callback=self.enemy_skill_done,
+                                   extra={"mx": mx, "my": my, "fight_map": fight_mgr.fight_map})
+        # 找到技能内所有目标
+        cell_list = fight_mgr.calc_range(skill.magic_info['range'], big_x, big_y, fight_mgr.fight_map)
+        fighters = fight_mgr.get_range_fighters(cell_list, fight_mgr)
+        # 技能效果
+        self.skill_effect(skill, fighters, ani)
+
+    def enemy_skill_done(self):
+        """
+        完成施法
+        """
+        self.enemy_skill_state = 1
+
     def skill_effect(self, skill, fighters, ani):
         """
         技能影响
@@ -221,7 +248,7 @@ class Fighter(Walker):
         callback_extra = []
         for fighter in fighters:
             if skill.magic_info['type'] == '群体攻击':
-                if not fighter.is_enemy:
+                if fighter.is_enemy == self.is_enemy:
                     continue
                 if skill.magic_info['damage_type'] == '魔法伤害':
                     damage = self.skill_damage(skill, fighter)
@@ -384,7 +411,7 @@ class Fighter(Walker):
 
     def do_attack(self, fight_mgr, target):
         """
-        普通攻击
+        玩家普通攻击
         """
         if self.skill_count > 0 or self.attack_count > 0:
             return
@@ -413,6 +440,35 @@ class Fighter(Walker):
         fight_mgr.single_attack_animation = True
         self.attack_count += 1
 
+    def enemy_do_attack(self, target):
+        """
+        敌人普通攻击
+        """
+        fight_mgr = g.fight_mgr
+        # 计算伤害
+        fight_data = list()
+        for i in range(self.combo):
+            damage, cri = self.attack_damage(target)
+            fight_data.append({"is_enemy": self.is_enemy, "type": "attack", "damage": damage, "cri": cri})
+            target.hp[0] -= damage
+            if target.hp[0] <= 0:
+                target.hp[0] = 0
+                break
+        # 敌人反击
+        if target.hp[0] > 0:
+            damage, cri = target.attack_damage(self)
+            fight_data.append({"is_enemy": target.is_enemy, "type": "attack", "damage": damage, "cri": cri})
+            self.hp[0] -= damage
+            if self.hp[0] <= 0:
+                self.hp[0] = 0
+
+        if not self.is_enemy:
+            fight_mgr.fight_player.start(self.fighter_id, target.fighter_id, fight_data)
+        else:
+            fight_mgr.fight_player.start(target.fighter_id, self.fighter_id, fight_data)
+        # TODO:开启单体动画开关，这里可以触发Fade
+        fight_mgr.single_attack_animation = True
+
     def attack_damage(self, target):
         """攻击伤害计算"""
         # 暴击率=吉运/10000
@@ -439,6 +495,35 @@ class Fighter(Walker):
             damage *= 2
 
         return int(damage), cri
+
+    def attack_range(self):
+        """
+        返回普通攻击范围
+        """
+        big_x, big_y = FightManager.small2big(self.mx, self.my)
+        cell_list = FightManager.calc_range(1, big_x, big_y, g.fight_mgr.fight_map)
+        return cell_list
+
+    def skill_range(self, skill):
+        """
+        返回魔法覆盖的范围
+        """
+        length = skill.magic_info['range'] + skill.magic_info['length']
+        big_x, big_y = FightManager.small2big(self.mx, self.my)
+        cell_list = FightManager.calc_range(length, big_x, big_y, g.fight_mgr.fight_map)
+        return cell_list
+
+    def find_max_range_skill(self):
+        """
+        找到攻击距离最远的魔法
+        """
+        if not self.skill_list:
+            return None
+        s = self.skill_list[0]
+        for skill in self.skill_list:
+            if skill.magic_info['length'] + skill.magic_info['range'] > s.magic_info['length'] + s.magic_info['range']:
+                s = skill
+        return s
 
     @staticmethod
     def five_elements_relation(element1, element2):
@@ -887,7 +972,7 @@ class FightManager:
         self.fight_menu = FightMenu(surface, 530, 100, self)
         self.info_plane = FighterInfoPlane()
         self.magic_plane = MagicPlane(self)
-        # self.fight_menu.switch = True
+        self.camera_mgr = CameraManager(self.fight_map, None)  # 镜头管理器
         self.current_fighter = None  # 当前选中的fighter
         # 鼠标按下时，地图上的像素坐标
         self.mu_x = 0
@@ -901,6 +986,12 @@ class FightManager:
         self.single_attack_animation = False
         # 战斗播放器
         self.fight_player = FightPlayer(self, 2)
+        # 当前回合敌人列表
+        self.enemy_list = []
+        # 当前正在行动的敌人
+        self.current_enemy = None
+        # 当前敌人行动的进行程度
+        self.current_enemy_state = 0  # 0初始状态 1镜头移动中 2移动中 3攻击中 4施法中 5执行完成
 
     def start(self, fighter_list, map_id):
         """
@@ -913,7 +1004,9 @@ class FightManager:
     def logic(self):
         if not self.switch:
             return
-        self.damage_logic()
+        self.camera_mgr.logic()  # 镜头管理逻辑
+        self.damage_logic()  # 伤害动画逻辑
+        self.enemy_logic()  # 敌人行动逻辑
         if self.single_attack_animation:
             # 单体攻击动画播放逻辑
             self.fight_player.logic()
@@ -1148,7 +1241,74 @@ class FightManager:
         self.select_attack_target = False
         self.fight_menu.switch = False
         self.current_fighter = None
-        # TODO:设置战斗状态为敌人行动状态，所有玩家操作被禁止
+        # 设置战斗状态为敌人行动状态，所有玩家操作被禁止
+        self.enemy_action = True
+        self.enemy_list = []
+        for fighter in self.fighter_list:
+            if fighter.is_enemy:
+                self.enemy_list.append(fighter)
+
+    def enemy_logic(self):
+        """
+        敌人逻辑
+        current_enemy_state 0初始状态 1镜头移动中 2移动结束 3移动中 4攻击中 5施法中 6执行完成
+        """
+        if not self.enemy_action:
+            return
+        if self.current_enemy is None:
+            if len(self.enemy_list) == 0:
+                # 切换回玩家操作
+                self.enemy_action = False
+                return
+            self.current_enemy = self.enemy_list.pop(0)
+            self.current_enemy_state = 0
+        if self.current_enemy_state == 0:
+            # 人物未行动时的逻辑,锁定视角到这个敌人身上
+            self.camera_mgr.move(self.current_enemy.render_x, self.current_enemy.render_y, self.lock_enemy,
+                                 [self.current_enemy])
+            self.current_enemy_state = 1
+            return
+        elif self.current_enemy_state == 1:
+            # 镜头移动中，什么都不用做
+            return
+        elif self.current_enemy_state == 2:
+            # 镜头移动完成
+            # 检测周围是否有敌人可以用魔法攻击到
+            max_skill = self.current_enemy.find_max_range_skill()
+            if max_skill is not None:
+                cell_list = self.current_enemy.skill_range(max_skill)
+                teammates = FightManager.get_range_teammates(cell_list, self)
+                # 随便打一个
+                if len(teammates) > 0:
+                    fighter = random.choice(teammates)
+                    self.current_enemy.enemy_do_skill(max_skill, fighter.mx, fighter.my)
+                    self.current_enemy_state = 5
+                    return
+            # 普通攻击逻辑
+            cell_list = self.current_enemy.attack_range()
+            teammates = FightManager.get_range_teammates(cell_list, self)
+            # 随便打一个
+            if len(teammates) > 0:
+                fighter = random.choice(teammates)
+                self.current_enemy.enemy_do_attack(fighter)
+                self.current_enemy_state = 4
+                return
+        elif self.current_enemy_state == 4:
+            # 攻击结束
+            if not self.single_attack_animation:
+                self.current_enemy_state = 6
+        elif self.current_enemy_state == 5:
+            # 施法结束
+            if self.current_enemy.enemy_skill_state == 0:
+                self.current_enemy_state = 6
+        elif self.current_enemy_state == 6:
+            # 行动结束
+            self.current_enemy = None
+            self.current_enemy_state = 0
+
+    def lock_enemy(self, enemy):
+        self.camera_mgr.lock(enemy)
+        self.current_enemy_state = 2
 
     @staticmethod
     def calc_range(length, big_x, big_y, fight_map):
@@ -1185,6 +1345,7 @@ class FightManager:
         for fighter in fighters[::-1]:
             if not fighter.is_enemy:
                 fighters.remove(fighter)
+        return fighters
 
     @staticmethod
     def get_range_teammates(cell_list, fight_mgr):
@@ -1195,6 +1356,7 @@ class FightManager:
         for fighter in fighters[::-1]:
             if fighter.is_enemy:
                 fighters.remove(fighter)
+        return fighters
 
     @staticmethod
     def big2small(big_x, big_y):

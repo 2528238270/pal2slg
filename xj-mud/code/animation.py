@@ -22,7 +22,7 @@ class PalAnimationFactory:
         """
         self.animator = animator
 
-    def create(self, ani_id, x, y, ani_cls=Animation, add=True, need_blend=False, extra=None):
+    def create(self, ani_id, x, y, ani_cls=Animation, add=True, need_blend=False, done_callback=None,extra=None):
         """
         加载动画文件，向ani_mrg新增animation对象
         """
@@ -64,7 +64,8 @@ class PalAnimationFactory:
         # 额外参数
         e = extra or dict()
         ani = ani_cls(x, y, img, cfg_base['dw'], cfg_base['dh'], cfg_base['time'], cfg_base['loop'],
-                      cfg_base['frame_range'], callback, fps=g.fps, need_blend=need_blend, **e)
+                      cfg_base['frame_range'], callback, done_callback=done_callback, fps=g.fps, need_blend=need_blend,
+                      **e)
         if add:
             self.animator.add_ani(ani)
         return ani

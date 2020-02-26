@@ -31,11 +31,13 @@ class CameraManager:
     def move(self, x, y, callback=None, args=None):
         """
         镜头移动到目标位置
+        x,y:地图坐标系的像素坐标
         """
         if self.moving:  # 正在移动
             return
         self.lock_role = False
         self.target_x, self.target_y = self.game_map.calc_roll_pos(x, y)
+        print(self.target_x,self.target_y)
         self.moving = True
         self.callback = callback
         if args is not None:
@@ -46,7 +48,7 @@ class CameraManager:
         镜头管理逻辑
         """
         # 如果当前是锁定主角状态，直接调用地图滚动逻辑
-        if self.lock_role:
+        if self.lock_role and self.walker is not None:
             self.game_map.roll(self.walker.render_x, self.walker.render_y)
             return
 
