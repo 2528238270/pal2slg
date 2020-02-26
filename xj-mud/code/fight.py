@@ -26,7 +26,7 @@ qq:871245007
 """
 import json
 import random
-from copy import deepcopy
+from copy import deepcopy, copy
 
 import pygame
 from pygame.surface import Surface
@@ -228,19 +228,12 @@ class Fighter(Walker):
         ani = g.ani_factory.create(skill.magic_info['ani_id'],
                                    mx * 16 + fight_mgr.fight_map.x - 8,
                                    my * 16 + fight_mgr.fight_map.y - 8, FightAnimation,
-                                   done_callback=self.enemy_skill_done,
                                    extra={"mx": mx, "my": my, "fight_map": fight_mgr.fight_map})
         # 找到技能内所有目标
         cell_list = fight_mgr.calc_range(skill.magic_info['range'], big_x, big_y, fight_mgr.fight_map)
         fighters = fight_mgr.get_range_fighters(cell_list, fight_mgr)
         # 技能效果
         self.skill_effect(skill, fighters, ani)
-
-    def enemy_skill_done(self):
-        """
-        完成施法
-        """
-        self.enemy_skill_state = 1
 
     def skill_effect(self, skill, fighters, ani):
         """
@@ -271,6 +264,7 @@ class Fighter(Walker):
                 # 死亡处理
                 if e['fighter'].hp[0] <= 0:
                     e['fighter'].set_dead()
+            self.enemy_skill_state = 1
 
         ani.done_callback = t_cb
 
@@ -280,8 +274,8 @@ class Fighter(Walker):
             进攻方灵力*技能加成-被攻方防御，10%的伤害波动
         target:被攻方
         """
-        damage = self.magic * skill.magic_info['damage']
-        damage += random.randint(-damage / 10, damage / 10)
+        damage = int(self.magic * skill.magic_info['damage'])
+        damage += random.randint(-int(damage / 10), int(damage / 10))
         if damage <= target.defense:
             damage = random.randint(1, 10)  # 伤害小于对方防御力时，伤害为1~10
         else:
@@ -556,6 +550,12 @@ class Fighter(Walker):
             if skill.magic_info['length'] + skill.magic_info['range'] > s.magic_info['length'] + s.magic_info['range']:
                 s = skill
         return s
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.name
 
     @staticmethod
     def five_elements_relation(element1, element2):
@@ -1030,6 +1030,7 @@ class FightManager:
         开始战斗
         """
         self.fighter_list = fighter_list
+        print(self.fighter_list)
         self.fight_map.load(map_id)
         self.switch = True
 
@@ -1047,8 +1048,6 @@ class FightManager:
                 self.single_attack_animation = False
             return
         self.fight_menu.logic()
-        # 渲染排序，显示正确的层级
-        self.fighter_list.sort(key=lambda fight: fight.y)
         for fight in self.fighter_list:
             fight.logic()
 
@@ -1071,12 +1070,16 @@ class FightManager:
                 damage.render()
             return
         Sprite.blit(self.surface, self.fight_map.btm_img, self.fight_map.x, self.fight_map.y)
+        # 渲染排序，显示正确的层级
+        temp_fighter_list = copy(self.fighter_list)
+        # 渲染排序，显示正确的层级
+        temp_fighter_list.sort(key=lambda fight: fight.y)
         # 渲染战斗者
-        for fight in self.fighter_list:
+        for fight in temp_fighter_list:
             fight.render(self.fight_map.x, self.fight_map.y)
         Sprite.blit(self.surface, self.fight_map.top_img, self.fight_map.x, self.fight_map.y)
         # 重绘战斗者
-        for fight in self.fighter_list:
+        for fight in temp_fighter_list:
             if self.fight_map.redraw_data[fight.mx][fight.my] == 1:
                 fight.render(self.fight_map.x, self.fight_map.y)
         # DEBUG
@@ -1108,6 +1111,7 @@ class FightManager:
     def mouse_down(self, x, y, pressed):
         mx = int((x - self.fight_map.x) / 48) * 3 + 1
         my = int((y - self.fight_map.y) / 48) * 3 + 1
+        print('大格子坐标', self.mouse_mx, self.mouse_my)
         if self.enemy_action:
             return
         if self.single_attack_animation:
@@ -1261,10 +1265,8 @@ class FightManager:
         """
         if self.single_attack_animation:
             return
-        # 重置所有友方人物行动计数
+        # 重置人物行动计数
         for fighter in self.fighter_list:
-            if fighter.is_enemy:
-                continue
             fighter.attack_count = 0
             fighter.skill_count = 0
             fighter.move_count = 0
@@ -1279,6 +1281,7 @@ class FightManager:
         for fighter in self.fighter_list:
             if fighter.is_enemy:
                 self.enemy_list.append(fighter)
+        print(self.enemy_list)
 
     def enemy_logic(self):
         """
@@ -1377,12 +1380,15 @@ class FightManager:
                 else:
                     continue
                 break
+            if dest_pos is None:
+                self.current_enemy_state = 6
+                return
             for index, pos in enumerate(path):
                 if pos == dest_pos:
                     path = path[:index + 1]
                     break
             self.current_enemy.move_by_path(path)
-            self.current_enemy.move_count+=1
+            self.current_enemy.move_count += 1
             self.current_enemy_state = 7
         elif self.current_enemy_state == 4:
             # 攻击结束
@@ -1390,7 +1396,7 @@ class FightManager:
                 self.current_enemy_state = 6
         elif self.current_enemy_state == 5:
             # 施法结束
-            if self.current_enemy.enemy_skill_state == 0:
+            if self.current_enemy.enemy_skill_state == 1:
                 self.current_enemy_state = 6
         elif self.current_enemy_state == 6:
             # 行动结束

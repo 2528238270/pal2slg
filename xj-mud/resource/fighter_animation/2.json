@@ -23,6 +23,7 @@
     "time": 2000,
     "frame_range": [0,7],
     "sound_frame": [
+      ["5",3]
     ],
     "attack_frame": [3,7],
     "move_frame": [],

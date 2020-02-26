@@ -211,12 +211,12 @@ class Command:
         开始测试战斗
         """
         fighter = Fighter(0, 10, 10, 3)
-        fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10000, 4, 3, 1)
+        fighter.set_attr([500, 500], [100, 100], 70, 10, 10, 4, 10000, 4, 3, 1)
         fighter.set_name('苏媚')
         fighter.set_skill([Magic(1), Magic(2), ])
 
         fighter_bt = Fighter(0, 10, 11, 3)
-        fighter_bt.set_attr([100, 100], [100, 100], 2000, 2000, 10, 4, 10000, 4, 3, 1)
+        fighter_bt.set_attr([999, 999], [100, 100], 200, 2000, 10, 4, 10000, 4, 3, 1)
         fighter_bt.set_name('变态苏媚')
         fighter_bt.set_skill([Magic(1)])
 
@@ -227,10 +227,20 @@ class Command:
 
         fighter_dgt3 = Fighter(2, 18, 10, 2, True)
         fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
-        fighter_dgt3.set_name('大光头吴涛')
+        fighter_dgt3.set_name('大光头吴涛3')
         fighter_dgt3.set_skill([Magic(1)])
 
-        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3,fighter_bt], 1)
+        fighter_dgt1 = Fighter(2, 34, 9, 2, True)
+        fighter_dgt1.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
+        fighter_dgt1.set_name('大光头吴涛1')
+        fighter_dgt1.set_skill([Magic(1)])
+
+        fighter_dgt2 = Fighter(2, 44, 4, 2, True)
+        fighter_dgt2.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
+        fighter_dgt2.set_name('大光头吴涛2')
+        fighter_dgt2.set_skill([Magic(1)])
+
+        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3, fighter_bt, fighter_dgt1, fighter_dgt2], 1)
         g.audio_player.play_music(5013)
         self.working = False
         self.done = True
