@@ -6,3 +6,7 @@ h5/.idea/
 xj-mud.rar
 *.rar
 运行方式.txt
+xj-mud/main.spec
+xj-mud/pck
+xj-mud/build/
+xj-mud/dist/

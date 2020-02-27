@@ -240,7 +240,22 @@ class Command:
         fighter_dgt2.set_name('大光头吴涛2')
         fighter_dgt2.set_skill([Magic(1)])
 
-        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3, fighter_bt, fighter_dgt1, fighter_dgt2], 1)
+        fighter_dgt4 = Fighter(2, 35, 9, 2, True)
+        fighter_dgt4.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
+        fighter_dgt4.set_name('大光头吴涛4')
+        fighter_dgt4.set_skill([Magic(1)])
+
+        fighter_dgt5 = Fighter(2, 36, 9, 2, True)
+        fighter_dgt5.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
+        fighter_dgt5.set_name('大光头吴涛5')
+        fighter_dgt5.set_skill([Magic(1)])
+
+        fighter_dgt6 = Fighter(2, 37, 9, 2, True)
+        fighter_dgt6.set_attr([100, 100], [100, 100], 10, 10, 10, 8, 10, 10, 2, 5)
+        fighter_dgt6.set_name('大光头吴涛6')
+        fighter_dgt6.set_skill([Magic(1)])
+
+        g.fight_mgr.start([fighter, fighter_dgt, fighter_dgt3, fighter_bt, fighter_dgt1, fighter_dgt2,fighter_dgt4,fighter_dgt5,fighter_dgt6], 1)
         g.audio_player.play_music(5013)
         self.working = False
         self.done = True
