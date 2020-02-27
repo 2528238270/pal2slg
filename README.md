@@ -2,4 +2,4 @@
 pygame史诗级巨作 
 国内功能最多的pygame项目 
 
-# 目前代码在development分支
+# 目前代码在develop分支
