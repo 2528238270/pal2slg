@@ -89,6 +89,9 @@ class Fighter(Walker):
         self.current_surface = None  # idle状态下的图片
         self.visible = True  # 是否可见
         self.enemy_skill_state = 0  # 0未完成 1已完成
+        # 焦点动画
+        self.focus_ani = Animation(g.fight_mgr.fight_map.x + self.render_x+int(self.cell_w/2), g.fight_mgr.fight_map.y + self.render_y,
+                                   g.focus_fighter_img, 32, 32, 1000, True, [0, 19])
         # TODO:这里应该读取配置文件
         t = {
             0: 1,  # 苏媚
@@ -365,6 +368,12 @@ class Fighter(Walker):
         这个逻辑主要是用来处理死亡动画的
         """
         super().logic()
+        # 焦点动画
+        if g.fight_mgr.enemy_action and g.fight_mgr.current_enemy is self:
+            self.focus_ani.x = g.fight_mgr.fight_map.x + self.render_x+int(self.cell_w/2)
+            self.focus_ani.y = g.fight_mgr.fight_map.y + self.render_y
+            self.focus_ani.update()
+        # 死亡动画
         if self.dead:
             self.dead_dy += 4
             self.alpha -= 8
@@ -385,6 +394,10 @@ class Fighter(Walker):
             return
         if not self.dead:
             super().render(map_x, map_y)
+            # 渲染焦点动画
+            if g.fight_mgr.enemy_action and g.fight_mgr.current_enemy is self:
+                print("画动画", self.focus_ani.x, self.focus_ani.y)
+                self.focus_ani.draw(g.screen)
         else:
             render_x = map_x + self.render_x
             render_y = map_y + self.render_y - self.dead_dy
@@ -987,12 +1000,13 @@ class FightManager:
         self.magic_len_cell_img = pygame.image.load('./resource/PicLib/all_sys/magic_len_cell.png').convert_alpha()
         self.btn_end_1_img = pygame.image.load('./resource/PicLib/all_sys/btn_end_1.png').convert_alpha()
         self.btn_end_2_img = pygame.image.load('./resource/PicLib/all_sys/btn_end_2.png').convert_alpha()
+        self.focus_fighter_img = pygame.image.load('./resource/PicLib/all_sys/focus_fighter.png').convert_alpha()
         self.btn_end = Button(640 - 87, 480 - 33, "", self.btn_end_1_img, self.btn_end_2_img,
                               callBackFunc=self.end_round_cb)  # 回合结束按钮
         self.enemy_action = False  # 敌人是否正在行动
         g.move_cell_img = self.move_cell_img
         g.magic_len_cell_img = self.magic_len_cell_img
-
+        g.focus_fighter_img = self.focus_fighter_img
         self.fight_map = FightMap()  # 战斗地图
         self.fighter_list = []
         self.round = 1  # 当前回合数

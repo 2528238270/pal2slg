@@ -19,7 +19,7 @@ from code.walker import Walker
 class StartScene(Scene):
     def __init__(self, scene_id):
         super().__init__(scene_id=scene_id)
-        self.video_state = 0  # TODO:调试完记得改为0 0开场动画没放完 1开场动画放完了 2正在播放循环动画
+        self.video_state = 1  # TODO:调试完记得改为0 0开场动画没放完 1开场动画放完了 2正在播放循环动画
         self.video1 = []
         self.video1_speed = 0
         self.video2 = []
