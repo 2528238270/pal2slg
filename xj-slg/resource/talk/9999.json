@@ -1,0 +1,42 @@
+[
+  {
+    "name": "吴涛",
+    "text": "Daddy,就是她欺负我！",
+    "face": -1,
+    "dir": "left",
+    "event": -1,
+    "event_args": null
+  },
+  {
+    "name": "千叶禅师",
+    "text": "嗯？你为何欺辱吾儿？",
+    "face": "37-2",
+    "dir": "right",
+    "event": -1,
+    "event_args": null
+  },
+  {
+    "name": "苏媚",
+    "text": "还真是打了小的，老的跑出来了！",
+    "face": "33-22",
+    "dir": "left",
+    "event": -1,
+    "event_args": null
+  },
+  {
+    "name": "苏媚",
+    "text": "(千叶禅师不是已经······怎么会出现在这里？)",
+    "face": "33-2",
+    "dir": "left",
+    "event": -1,
+    "event_args": null
+  },
+  {
+    "name": "千叶禅师",
+    "text": "今天我定要讨个说法！",
+    "face": "37-2",
+    "dir": "right",
+    "event": -1,
+    "event_args": null
+  }
+]
