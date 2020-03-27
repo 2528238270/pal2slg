@@ -48,19 +48,11 @@ class Game:
 
         g.fnt_talk = pygame.font.SysFont('microsoftyaheimicrosoftyaheiui', 16)
         g.ry_fnt = pygame.image.load('./resource/font/ryFont_5a94031e.png').convert_alpha()
-        g.bg_enter = pygame.image.load('./resource/PicLib/all_sys/login.png').convert_alpha()
-        g.btn1 = pygame.image.load('./resource/PicLib/all_sys/btn1.png').convert_alpha()
-        g.btn2 = pygame.image.load('./resource/PicLib/all_sys/btn2.png').convert_alpha()
-        g.btn3 = pygame.image.load('./resource/PicLib/all_sys/btn3.png').convert_alpha()
-        g.btn4 = pygame.image.load('./resource/PicLib/all_sys/btn4.png').convert_alpha()
-        g.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
-        g.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
         g.sm_walk = pygame.image.load('./resource/PicLib/all_char/0.png').convert_alpha()
 
         with open('./resource/font/ryFont_f695d33e.fnt', mode='r', encoding='utf8') as file:
             g.ry_fnt_data = json.loads(file.read())
-        with open('./resource/skill.json', mode='r', encoding='utf8') as file:
-            g.skill_data = json.loads(file.read())
+
         g.screen = self.screen
         g.scene_mgr = SceneManager()
         g.animator = Animator(self.screen)
@@ -68,8 +60,6 @@ class Game:
         g.talk_mgr = TalkManager(self.screen)
         g.audio_player = AudioPlayer()
         g.scene_mgr.add(StartScene(ENUM_SCENE.START_SCENE))
-        # g.scene_mgr.add(GameScene(ENUM_SCENE.GAME_SCENE))
-        # g.animator.add(100, 100, g.sm_walk, 56, 96, 1000, True, [9, 17])
         # g.scene_id = ENUM_SCENE.GAME_SCENE
         g.scene_id = ENUM_SCENE.START_SCENE
         g.talk_mgr.start(0)

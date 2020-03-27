@@ -26,10 +26,19 @@ class StartScene(Scene):
         self.video2_speed = 0
         self.count = 0
         self.bg = None
+
+        self.btn1 = pygame.image.load('./resource/PicLib/all_sys/btn1.png').convert_alpha()
+        self.btn2 = pygame.image.load('./resource/PicLib/all_sys/btn2.png').convert_alpha()
+        self.btn3 = pygame.image.load('./resource/PicLib/all_sys/btn3.png').convert_alpha()
+        self.btn4 = pygame.image.load('./resource/PicLib/all_sys/btn4.png').convert_alpha()
+        self.btn5 = pygame.image.load('./resource/PicLib/all_sys/btn5.png').convert_alpha()
+        self.btn6 = pygame.image.load('./resource/PicLib/all_sys/btn6.png').convert_alpha()
+        self.bg_enter = pygame.image.load('./resource/PicLib/all_sys/login.png').convert_alpha()
+
         # 创建按钮
-        self.btn_new_game = Button(230, 270, imgNormal=g.btn1, imgMove=g.btn2, callBackFunc=self.new_game)
-        self.btn_old_game = Button(230, 320, imgNormal=g.btn3, imgMove=g.btn4, callBackFunc=g.fade.start)
-        self.btn_exit_game = Button(230, 370, imgNormal=g.btn5, imgMove=g.btn6, callBackFunc=g.fade.start)
+        self.btn_new_game = Button(230, 270, imgNormal=self.btn1, imgMove=self.btn2, callBackFunc=self.new_game)
+        self.btn_old_game = Button(230, 320, imgNormal=self.btn3, imgMove=self.btn4, callBackFunc=g.fade.start)
+        self.btn_exit_game = Button(230, 370, imgNormal=self.btn5, imgMove=self.btn6, callBackFunc=g.fade.start)
 
         cap1 = cv2.VideoCapture("./resource/Video/StartMenu.avi")
         cap2 = cv2.VideoCapture("./resource/Video/MenuLoop.avi")
@@ -85,7 +94,7 @@ class StartScene(Scene):
         pygame.surfarray.blit_array(g.screen, self.bg)
         # 绘制背景、按钮
         if self.video_state == 1:
-            Sprite.blit(g.screen, g.bg_enter, 0, 0)
+            Sprite.blit(g.screen, self.bg_enter, 0, 0)
             self.btn_new_game.draw(g.screen)
             self.btn_old_game.draw(g.screen)
             self.btn_exit_game.draw(g.screen)
@@ -136,12 +145,9 @@ class GameScene(Scene):
 
     def __init__(self, scene_id, load_save=False):
         super().__init__(scene_id=scene_id)
+        # 初始化游戏必要的管理器
         self.game_map = GameMap()
-        if not load_save:
-            # 新游戏
-            self.game_map.load(1)
-            self.sm_walker = Walker(0, 35, 40)
-        self.camera_mgr = CameraManager(self.game_map, self.sm_walker)  # 镜头管理器
+        self.camera_mgr = CameraManager(self.game_map, None)  # 镜头管理器
         self.npc_mgr = NpcManager(g.screen)  # npc管理器
         self.story_player = StoryPlayer()  # 剧情播放器
         self.ani_factory = PalAnimationFactory(g.animator)  # 动画工厂，为剧情播放器提供动画功能
@@ -151,45 +157,18 @@ class GameScene(Scene):
         g.game_map = self.game_map
         g.ani_factory = self.ani_factory
         g.fight_mgr = self.fight_mgr
-        self.story_player.load_script(1)
-        self.story_player.play()
-        # fighter = Fighter(0, 10, 10, 3)
-        # fighter.set_attr([100, 100], [100, 100], 10, 10, 10, 4, 10, 10, 3)
-        # fighter.set_name('苏媚')
-        # fighter.set_skill([Magic(1), Magic(2), ])
-        #
-        # fighter_dgt = Fighter(2, 15, 10, 2, True)
-        # fighter_dgt.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt.set_name('大光头吴涛1')
-        #
-        # fighter_dgt3 = Fighter(2, 16, 10, 2, True)
-        # fighter_dgt3.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt3.set_name('大光头吴涛3')
-        #
-        # fighter_dgt2 = Fighter(2, 17, 10, 2, True)
-        # fighter_dgt2.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt2.set_name('大光头吴涛2')
-        #
-        # fighter_dgt4 = Fighter(2, 15, 11, 2, True)
-        # fighter_dgt4.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt4.set_name('大光头吴涛4')
-        #
-        # fighter_dgt5 = Fighter(2, 16, 11, 2, True)
-        # fighter_dgt5.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt5.set_name('大光头吴涛5')
-        #
-        # fighter_dgt6 = Fighter(2, 17, 11, 2, True)
-        # fighter_dgt6.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # fighter_dgt6.set_name('大光头吴涛6')
-        #
-        # hg1 = Fighter(1, 15, 8, 2, True)
-        # hg1.set_attr([100, 100], [100, 100], 10, 10, 10, 1, 10, 10, 2)
-        # hg1.set_name('黑鬼')
-        #
-        # self.fight_mgr.start(
-        #     [fighter, fighter_dgt, fighter_dgt2, fighter_dgt3, fighter_dgt4, fighter_dgt5, fighter_dgt6,hg1], 1)
-        # self.test_npc = Npc(1, 30, 30, 3, [1000, 1001])
-        # self.npc_mgr.add(self.test_npc)
+
+        if not load_save:
+            # 新游戏
+            self.game_map.load(1)
+            self.sm_walker = Walker(0, 35, 40)
+            self.camera_mgr.walker = self.sm_walker
+        else:
+            # TODO:加载游戏
+            pass
+
+        # self.story_player.load_script(1)
+        # self.story_player.play()
 
     def logic(self):
         if self.fight_mgr.switch:
